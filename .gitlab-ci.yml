@@ -1,0 +1,57 @@
+image: hrii/focal_ros_noetic:latest
+
+stages:
+  - build
+  - test
+  # - pages
+
+before_script:
+  - apt update
+  - source /opt/ros/noetic/setup.bash
+  
+  # Go to home folder and clone hrii_installation_tools
+  - cd ~
+  - git clone git@gitlab.iit.it:hrii/general/hrii_installation_tools.git
+
+  # Create ros workspace
+  - WORKSPACE_TO_SOURCE=~/ros_ws
+  - mkdir -p $WORKSPACE_TO_SOURCE/src
+  
+  # 
+  - cd $WORKSPACE_TO_SOURCE/src
+  - git clone git@gitlab.iit.it:$CI_PROJECT_PATH.git -b $CI_COMMIT_BRANCH
+
+  - git clone git@gitlab.iit.it:hrii/planning/hrii_trajectory_planner.git
+  - git clone git@gitlab.iit.it:hrii/robotics/common/hrii_robot_interface.git
+  - git clone git@gitlab.iit.it:hrii/robotics/common/hrii_robot_msgs.git
+  - git clone git@gitlab.iit.it:hrii/general/hrii_utils.git
+
+  - apt install ros-noetic-move-base-msgs -y
+
+build:
+  stage: build
+  script:
+    - cd $WORKSPACE_TO_SOURCE
+    - catkin_make -Dmatlogger2_DIR=~/git/hrii_gitlab/general/matlogger2/build -DFranka_DIR:PATH=~/git/hrii_gitlab/robotics/franka/libfranka/build
+
+test:
+  stage: test
+  script:
+    - cd $WORKSPACE_TO_SOURCE
+    - echo TODO
+    #- catkin_make run_tests
+
+# pages:
+#   stage: pages
+#   script:
+#   - apt update && apt install doxygen graphviz -y
+#   - cd - cd $WORKSPACE_TO_SOURCE/src/$CI_PROJECT_NAME
+#   - doxygen Doxyfile
+#   - cd
+#   - mv - cd $WORKSPACE_TO_SOURCE/src/$CI_PROJECT_NAME/docs/html/ /builds/$CI_PROJECT_PATH/public
+  
+#   artifacts:
+#     paths:
+#     - public
+#   only:
+#     - $CI_DEFAULT_BRANCH
