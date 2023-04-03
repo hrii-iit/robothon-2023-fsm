@@ -38,7 +38,7 @@
     </group>
 
     <!-- Launch right robot -->
-    <!-- <group ns="$(arg right_robot_id)">
+    <group ns="$(arg right_robot_id)">
         <include file="$(find hrii_task_board_fsm)/launch/launch_robot.xml" pass_all_args="true">
             <arg name="arm_id" value="$(arg right_robot_id)"/>
             <arg name="x" value="$(arg right_robot_init_pose_x)"/>
@@ -47,15 +47,29 @@
             <arg name="yaw" value="$(arg right_robot_init_pose_yaw)"/>
             <arg name="controller" value="$(arg right_robot_controller)"/>
         </include>
-    </group> -->
+    </group>
+
+    <group if="$(arg sim)">
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(arg gazebo_world)"/>
+            <arg name="paused" value="true"/>
+            <arg name="gui" value="$(eval not arg('sim_headless'))"/>
+            <arg name="use_sim_time" value="true"/>
+        </include>
+
+        <include file="$(find hrii_gazebo_utils)/launch/spawn_urdf.launch">
+            <arg name="model_name" value="task_board"/>
+            <arg name="x_spawn_pose" value="0"/>
+            <arg name="y_spawn_pose" value="0"/>
+            <arg name="z_spawn_pose" value="0"/>
+            <arg name="roll_spawn_pose" value="0"/>
+            <arg name="pitch_spawn_pose" value="0"/>
+            <arg name="yaw_spawn_pose" value="0"/>
+            <arg name="urdf_filepath" value="$(find hrii_task_board_description)/robots/task_board.urdf.xacro"/>
+        </include>
+    </group>
     
-    <include if="$(arg sim)" file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(arg gazebo_world)"/>
-        <arg name="paused" value="true"/>
-        <arg name="gui" value="$(eval not arg('sim_headless'))"/>
-        <arg name="use_sim_time" value="true"/>
-    </include>
-    
+    <!-- Launch the FSMs -->
     <group ns="fsm">
         <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
@@ -63,8 +77,8 @@
         </node>
 
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
-        
     </group>
-    <node if="$(arg launch_rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" args="-f $(arg left_robot_id)_link0 -d $(arg rviz_config_file) --splash-screen $(find hrii_task_board_fsm)/splash.png"/>
+
+    <node if="$(arg launch_rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" args="-f $(arg left_robot_id)_link0 -d $(arg rviz_config_file)"/>
      
 </launch>
