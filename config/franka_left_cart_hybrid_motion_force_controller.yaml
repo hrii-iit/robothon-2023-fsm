@@ -23,8 +23,8 @@ dictitems:
       groups: !!python/object/new:dynamic_reconfigure.encoding.Config
         state: []
       id: 0
-      motion_rotation_gain: 12.0
-      motion_translation_gain: 24.0
+      motion_rotation_gain: 1.0e-05
+      motion_translation_gain: 0.0001
       name: Default
       parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
         state: []
@@ -36,8 +36,8 @@ dictitems:
       type: ''
       wrench_filter_param: 0.01
     state: []
-  motion_rotation_gain: 12.0
-  motion_translation_gain: 24.0
+  motion_rotation_gain: 10
+  motion_translation_gain: 20
   torque_D_gain: 0.0
   torque_I_gain: 0.0
   torque_P_gain: 0.0001
