@@ -4,12 +4,10 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
         - /Franka Left1
-        - /Franka Left1/EquilibriumPose1
-      Splitter Ratio: 0.5
-    Tree Height: 678
+        - /TF1/Frames1
+      Splitter Ratio: 0.7663817405700684
+    Tree Height: 712
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -176,6 +174,51 @@ Visualization Manager:
           Visual Enabled: true
         - Class: rviz/InteractiveMarkers
           Enable Transparency: true
+          Enabled: true
+          Name: InteractiveMarkers
+          Show Axes: false
+          Show Descriptions: true
+          Show Visual Aids: false
+          Update Topic: /franka_left/equilibrium_pose_marker/update
+          Value: true
+        - Alpha: 1
+          Axes Length: 0.10000000149011612
+          Axes Radius: 0.009999999776482582
+          Class: rviz/Pose
+          Color: 255; 25; 0
+          Enabled: true
+          Head Length: 0.30000001192092896
+          Head Radius: 0.10000000149011612
+          Name: EquilibriumPose
+          Queue Size: 10
+          Shaft Length: 1
+          Shaft Radius: 0.05000000074505806
+          Shape: Axes
+          Topic: /franka_left/cartesian_impedance_example_controller/equilibrium_pose
+          Unreliable: false
+          Value: true
+      Enabled: true
+      Name: Franka Left
+    - Class: rviz/Group
+      Displays:
+        - Alpha: 1
+          Class: rviz/RobotModel
+          Collision Enabled: false
+          Enabled: true
+          Links:
+            All Links Enabled: true
+            Expand Joint Details: false
+            Expand Link Details: false
+            Expand Tree: false
+            Link Tree Style: Links in Alphabetic Order
+          Name: RobotModel
+          Robot Description: /franka_right/robot_description
+          TF Prefix: ""
+          Update Interval: 0
+          Value: true
+          Visual Enabled: true
+        - Class: rviz/InteractiveMarkers
+          Enable Transparency: true
           Enabled: false
           Name: InteractiveMarkers
           Show Axes: false
@@ -196,16 +239,149 @@ Visualization Manager:
           Shaft Length: 1
           Shaft Radius: 0.05000000074505806
           Shape: Axes
-          Topic: /franka_left/cartesian_impedance_example_controller/equilibrium_pose
+          Topic: /franka_right/cartesian_impedance_example_controller/equilibrium_pose
           Unreliable: false
           Value: true
       Enabled: true
-      Name: Franka Left
+      Name: Franka Right
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        franka_left_EE:
+          Value: false
+        franka_left_K:
+          Value: false
+        franka_left_NE:
+          Value: false
+        franka_left_hand:
+          Value: false
+        franka_left_hand_sc:
+          Value: false
+        franka_left_hand_tcp:
+          Value: false
+        franka_left_leftfinger:
+          Value: false
+        franka_left_link0:
+          Value: false
+        franka_left_link0_sc:
+          Value: false
+        franka_left_link1:
+          Value: false
+        franka_left_link1_sc:
+          Value: false
+        franka_left_link2:
+          Value: false
+        franka_left_link2_sc:
+          Value: false
+        franka_left_link3:
+          Value: false
+        franka_left_link3_sc:
+          Value: false
+        franka_left_link4:
+          Value: false
+        franka_left_link4_sc:
+          Value: false
+        franka_left_link5:
+          Value: false
+        franka_left_link5_sc:
+          Value: false
+        franka_left_link6:
+          Value: false
+        franka_left_link6_sc:
+          Value: false
+        franka_left_link7:
+          Value: false
+        franka_left_link7_sc:
+          Value: false
+        franka_left_link8:
+          Value: false
+        franka_left_rightfinger:
+          Value: false
+        task_board_base_link:
+          Value: false
+        task_board_blue_button_link:
+          Value: false
+        task_board_box_link:
+          Value: false
+        task_board_door_handle_link:
+          Value: false
+        task_board_door_link:
+          Value: false
+        task_board_ending_connector_hole_link:
+          Value: false
+        task_board_left_wire_reel_link:
+          Value: false
+        task_board_m5_display_link:
+          Value: false
+        task_board_probe_handle_link:
+          Value: false
+        task_board_probe_link:
+          Value: false
+        task_board_red_button_link:
+          Value: false
+        task_board_right_wire_reel_link:
+          Value: false
+        task_board_starting_connector_hole_link:
+          Value: false
+        task_board_starting_slider_link:
+          Value: false
+        world:
+          Value: true
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+      Tree:
+        world:
+          franka_left_link0:
+            franka_left_link0_sc:
+              {}
+            franka_left_link1:
+              franka_left_link1_sc:
+                {}
+              franka_left_link2:
+                franka_left_link2_sc:
+                  {}
+                franka_left_link3:
+                  franka_left_link3_sc:
+                    {}
+                  franka_left_link4:
+                    franka_left_link4_sc:
+                      {}
+                    franka_left_link5:
+                      franka_left_link5_sc:
+                        {}
+                      franka_left_link6:
+                        franka_left_link6_sc:
+                          {}
+                        franka_left_link7:
+                          franka_left_link7_sc:
+                            {}
+                          franka_left_link8:
+                            franka_left_NE:
+                              franka_left_EE:
+                                franka_left_K:
+                                  {}
+                            franka_left_hand:
+                              franka_left_hand_sc:
+                                {}
+                              franka_left_hand_tcp:
+                                {}
+                              franka_left_leftfinger:
+                                {}
+                              franka_left_rightfinger:
+                                {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 211; 215; 207
     Default Light: true
-    Fixed Frame: world
+    Fixed Frame: franka_left_link0
     Frame Rate: 30
   Name: root
   Tools:
@@ -229,7 +405,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.125654935836792
+      Distance: 2.3807334899902344
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -237,25 +413,25 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.7897153496742249
-        Y: 0.06752851605415344
-        Z: 0.32992780208587646
+        X: 0.47168684005737305
+        Y: -0.5334693789482117
+        Z: 0.4730275273323059
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.22539862990379333
+      Pitch: 0.18039864301681519
       Target Frame: <Fixed Frame>
-      Yaw: 0.005396251566708088
+      Yaw: 4.7185750007629395
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1009
+  Height: 1043
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000016100000342fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006e00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000004700000342000000f100fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000342fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000004700000342000000c200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073a00000040fc0100000002fb0000000800540069006d006501000000000000073a0000045a00fffffffb0000000800540069006d00650100000000000004500000000000000000000004bc0000034200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000016100000364fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006e00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000004700000364000000f100fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000364fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000004700000364000000c200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073a00000040fc0100000002fb0000000800540069006d006501000000000000073a0000045a00fffffffb0000000800540069006d00650100000000000004500000000000000000000004bc0000036400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -266,4 +442,4 @@ Window Geometry:
     collapsed: false
   Width: 1850
   X: 70
-  Y: 34
+  Y: 0
