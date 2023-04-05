@@ -194,7 +194,7 @@ Visualization Manager:
           Shaft Length: 1
           Shaft Radius: 0.05000000074505806
           Shape: Axes
-          Topic: /franka_left/cartesian_impedance_example_controller/equilibrium_pose
+          Topic: /franka_left/cart_hybrid_motion_force_controller/desired_tool_pose
           Unreliable: false
           Value: true
       Enabled: true
@@ -405,7 +405,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.3807334899902344
+      Distance: 1.2204654216766357
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1

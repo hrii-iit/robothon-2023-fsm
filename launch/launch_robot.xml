@@ -3,6 +3,7 @@
     <arg name="sim" default="true"/>
     <arg name="controller"  default="cart_hybrid_motion_force_controller"     doc="Which example controller should be started? (One of {cartesian_impedance,model,force,joint_position,joint_velocity}_example_controller)" />
     <arg name="controller_config_file" default="" doc="Controller config file .yaml" />
+    <arg name="controller_desired_pose_topic" default="$(arg controller)/desired_tool_pose"/>
 
     <!-- Simulation group -->
     <group if="$(arg sim)">
@@ -92,14 +93,13 @@
         
     </group>
 
-    <node pkg="dynamic_reconfigure" type="dynparam" name="dynparam" args="dump /node $(arg controller_config_file)"/>
+    <node pkg="dynamic_reconfigure" type="dynparam" name="dynamic_reconfigure_load" args="load $(arg controller)/dyn_rec_ctrl_param $(arg controller_config_file)"/>
 
     <!-- Start only if cartesian_impedance_example_controller -->
     <node name="interactive_marker" pkg="franka_example_controllers" type="interactive_marker.py"
             if="$(arg launch_interactive_marker)">
         <param name="link_name" value="$(arg arm_id)_link0" />
-        <!-- <remap to="cartesian_impedance_example_controller/equilibrium_pose" from="equilibrium_pose" /> -->
-        <remap to="cart_hybrid_motion_force_controller/desired_tool_pose" from="equilibrium_pose"/>
+        <remap to="$(arg controller_desired_pose_topic)" from="equilibrium_pose"/>
     </node>
 
     <!-- Trajectory planner -->
@@ -107,7 +107,7 @@
         <arg name="trajectory_planner_type" value="QUINTIC_POL"/>
         <arg name="inertial_frame_name" value="$(arg arm_id)_link0"/>
         <arg name="moving_frame_name" value="$(arg arm_id)_EE"/>
-        <arg name="desired_pose_topic" value="cartesian_impedance_example_controller/equilibrium_pose"/>
+        <arg name="desired_pose_topic" value="$(arg controller_desired_pose_topic)"/>
         <arg name="debug_mode" value="false"/>
     </include>
 

@@ -12,9 +12,10 @@
     <!-- Left robot arguments -->
     <arg name="left_robot_id" default="franka_left"/>
     <arg name="left_robot_ip" default="192.168.0.102"/>
-    <!-- <arg name="left_robot_controller" default="cart_hybrid_motion_force_controller"/> -->
-    <!-- <arg name="left_robot_controller" default="joint_velocity_example_controller"/> -->
-    <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/>
+    <arg name="left_robot_controller" default="cart_hybrid_motion_force_controller"/>
+    <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/desired_tool_pose"/>
+    <!-- <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/> -->
+    <!-- <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/equilibrium_pose"/> -->
     <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/franka_left_cart_hybrid_motion_force_controller.yaml"/>
     <arg name="left_robot_init_pose_x" default="0"/>
     <arg name="left_robot_init_pose_y" default="-0.45"/>
@@ -41,6 +42,7 @@
             <arg name="yaw" value="$(arg left_robot_init_pose_yaw)"/>
             <arg name="controller" value="$(arg left_robot_controller)"/>
             <arg name="controller_config_file" value="$(arg left_robot_controller_config_file)"/>
+            <arg name="controller_desired_pose_topic" value="$(arg left_robot_controller_desired_pose_topic)"/>
             <arg name="launch_interactive_marker" value="$(arg left_robot_launch_interactive_marker)"/>
         </include>
     </group>
@@ -82,11 +84,12 @@
         <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
             <param name="right_robot_id" value="$(arg right_robot_id)"/>
+
         </node>
 
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
     </group>
 
-    <node if="$(arg launch_rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" args="-f $(arg left_robot_id)_link0 -d $(arg rviz_config_file)"/>
+    <node if="$(arg launch_rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(arg rviz_config_file)"/>
      
 </launch>
