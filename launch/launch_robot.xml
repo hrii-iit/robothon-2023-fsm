@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="sim" default="true"/>
+    <arg name="controller"  default="cart_hybrid_motion_force_controller"     doc="Which example controller should be started? (One of {cartesian_impedance,model,force,joint_position,joint_velocity}_example_controller)" />
+    <arg name="controller_config_file" default="" doc="Controller config file .yaml" />
 
+    <!-- Simulation group -->
     <group if="$(arg sim)">
         <!-- Gazebo & GUI Configuration -->
         <arg name="gazebo"      default="true"  doc="Should the gazebo simulation be launched? Use false in case if you want to include this file and launch gazebo yourself" />
@@ -12,8 +15,8 @@
 
         <!-- Robot Customization -->
         <arg name="arm_id"      default="franka_left" doc="Name of the robot to spawn" />
+        <arg name="robot_ip"      default="" doc="IP of the robot" />
         <arg name="use_gripper" default="true"  doc="Should a franka hand be mounted on the flange?" />
-        <arg name="controller"  default="cart_hybrid_motion_force_controller"     doc="Which example controller should be started? (One of {cartesian_impedance,model,force,joint_position,joint_velocity}_example_controller)" />
         <arg name="x"           default="0"     doc="How far forward to place the base of the robot in [m]?" />
         <arg name="y"           default="0"     doc="How far leftwards to place the base of the robot in [m]?" />
         <arg name="z"           default="0"     doc="How far upwards to place the base of the robot in [m]?" />
@@ -32,7 +35,7 @@
                         -J $(arg arm_id)_joint7 0.785398163397
                         -J $(arg arm_id)_finger_joint1 0.001
                         -J $(arg arm_id)_finger_joint2 0.001"/>
-        <arg name="launch_interactive_marker" default="false" doc="Should the interactive marker node be started?" /> -->
+        <arg name="launch_interactive_marker" default="false" doc="Should the interactive marker node be started?" />
 
         <param name="robot_description"
                 command="xacro $(find franka_description)/robots/panda/panda.urdf.xacro
@@ -69,17 +72,35 @@
             <rosparam param="source_list">[franka_state_controller/joint_states, franka_gripper/joint_states] </rosparam>
             <param name="rate" value="30"/>
         </node>
-
-        <!-- Start only if cartesian_impedance_example_controller -->
-        <node name="interactive_marker" pkg="franka_example_controllers" type="interactive_marker.py"
-                if="$(arg launch_interactive_marker)">
-            <param name="link_name" value="$(arg arm_id)_link0" />
-            <!-- <remap to="cartesian_impedance_example_controller/equilibrium_pose" from="equilibrium_pose" /> -->
-            <remap to="cart_hybrid_motion_force_controller/desired_tool_pose" from="equilibrium_pose"/>
-        </node>
-
         
     </group>
+
+    <!-- Hardware group -->
+    <group unless="$(arg sim)">
+    
+        <include file="$(find franka_control)/launch/franka_control.launch" pass_all_args="true"/>
+
+        <rosparam command="load" file="$(find franka_example_controllers)/config/franka_example_controllers.yaml" subst_value="true" />
+        <rosparam file="$(find franka_controllers)/config/franka_controllers.yaml" subst_value="true" />
+
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="$(arg controller)"/>
+        
+        <!-- <node name="interactive_marker" pkg="franka_example_controllers" type="interactive_marker.py" required="true" output="screen">
+            <param name="link_name" value="$(arg arm_id)_link0" />
+            <remap from="equilibrium_pose" to="/cartesian_impedance_example_controller/equilibrium_pose" />
+        </node> -->
+        
+    </group>
+
+    <node pkg="dynamic_reconfigure" type="dynparam" name="dynparam" args="dump /node $(arg controller_config_file)"/>
+
+    <!-- Start only if cartesian_impedance_example_controller -->
+    <node name="interactive_marker" pkg="franka_example_controllers" type="interactive_marker.py"
+            if="$(arg launch_interactive_marker)">
+        <param name="link_name" value="$(arg arm_id)_link0" />
+        <!-- <remap to="cartesian_impedance_example_controller/equilibrium_pose" from="equilibrium_pose" /> -->
+        <remap to="cart_hybrid_motion_force_controller/desired_tool_pose" from="equilibrium_pose"/>
+    </node>
 
     <!-- Trajectory planner -->
     <include file="$(find hrii_trajectory_planner)/launch/trajectory_handler.launch">
