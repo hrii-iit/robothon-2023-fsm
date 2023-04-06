@@ -25,11 +25,13 @@
 
     <!-- Right robot arguments -->
     <arg name="right_robot_id" default="franka_right"/>
+    <arg name="right_robot_ip" default="192.168.0.101"/>
     <arg name="right_robot_controller" default="cartesian_impedance_example_controller"/>
     <arg name="right_robot_init_pose_x" default="0"/>
     <arg name="right_robot_init_pose_y" default="0.45"/>
     <arg name="right_robot_init_pose_z" default="0"/>
     <arg name="right_robot_init_pose_yaw" default="-1.5707"/>
+    <arg name="right_robot_launch_interactive_marker" default="false"/>
 
     <!-- Launch left robot -->
     <group ns="$(arg left_robot_id)">
@@ -48,16 +50,20 @@
     </group>
 
     <!-- Launch right robot -->
-    <!-- <group ns="$(arg right_robot_id)">
+    <group ns="$(arg right_robot_id)">
         <include file="$(find hrii_task_board_fsm)/launch/launch_robot.xml" pass_all_args="true">
             <arg name="arm_id" value="$(arg right_robot_id)"/>
+            <arg name="robot_ip" value="$(arg right_robot_ip)"/>
             <arg name="x" value="$(arg right_robot_init_pose_x)"/>
             <arg name="y" value="$(arg right_robot_init_pose_y)"/>
             <arg name="z" value="$(arg right_robot_init_pose_z)"/>
             <arg name="yaw" value="$(arg right_robot_init_pose_yaw)"/>
             <arg name="controller" value="$(arg right_robot_controller)"/>
+            <!-- <arg name="controller_config_file" value="$(arg right_robot_controller_config_file)"/> -->
+            <!-- <arg name="controller_desired_pose_topic" value="$(arg right_robot_controller_desired_pose_topic)"/> -->
+            <arg name="launch_interactive_marker" value="$(arg right_robot_launch_interactive_marker)"/>
         </include>
-    </group> -->
+    </group>
 
     <group if="$(arg sim)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
