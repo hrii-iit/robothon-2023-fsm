@@ -20,8 +20,8 @@
     <!-- <arg name="left_robot_launch_gripper" default="no_gripper"/> -->
     <arg name="left_robot_urdf" default="$(find franka_description)/robots/panda_all_grippers/panda_all_grippers.urdf.xacro"/>
     <arg name="left_robot_xacro_args" default="launch_gripper:=$(arg left_robot_launch_gripper)"/>
-    <!-- <arg name="left_robot_controller" default="cart_hybrid_motion_force_controller"/> -->
-    <arg name="left_robot_controller" default="matlogger"/>
+    <arg name="left_robot_controller" default="cart_hybrid_motion_force_controller"/>
+    <!-- <arg name="left_robot_controller" default="matlogger"/> -->
     <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/desired_tool_pose"/>
     <!-- <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/> -->
     <!-- <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/equilibrium_pose"/> -->
@@ -113,7 +113,7 @@
     </group>
     
     <!-- Launch the FSMs -->
-    <!-- <group ns="fsm">
+    <group ns="fsm">
         <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
             <param name="right_robot_id" value="$(arg right_robot_id)"/>
@@ -121,7 +121,7 @@
         </node>
 
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
-    </group> -->
+    </group>
 
     <node if="$(arg launch_rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(arg rviz_config_file)"/>
      
