@@ -1,0 +1,45 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  axis_mode_pitch: false
+  axis_mode_roll: false
+  axis_mode_x: false
+  axis_mode_y: false
+  axis_mode_yaw: false
+  axis_mode_z: false
+  force_D_gain: 0.0
+  force_I_gain: 0.0
+  force_P_gain: 0.0001
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      axis_mode_pitch: false
+      axis_mode_roll: false
+      axis_mode_x: false
+      axis_mode_y: false
+      axis_mode_yaw: false
+      axis_mode_z: false
+      force_D_gain: 0.0
+      force_I_gain: 0.0
+      force_P_gain: 0.0001
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      motion_rotation_gain: 1.0e-05
+      motion_translation_gain: 0.0001
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      state: true
+      torque_D_gain: 0.0
+      torque_I_gain: 0.0
+      torque_P_gain: 0.0001
+      type: ''
+      wrench_filter_param: 0.01
+    state: []
+  motion_rotation_gain: 10
+  motion_translation_gain: 20
+  torque_D_gain: 0.0
+  torque_I_gain: 0.0
+  torque_P_gain: 0.0001
+  wrench_filter_param: 0.01
+state: []
