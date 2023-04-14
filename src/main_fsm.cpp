@@ -167,6 +167,9 @@ class MainFSM
         std::string move_slider_activation_service_name_;
         ros::ServiceClient move_slider_activation_client_;
 
+        tf2_ros::Buffer tfBuffer;
+        tf2_ros::TransformListener tfListener{tfBuffer};
+
         // Robots attributs
         std::string left_robot_id_, right_robot_id_;
 
@@ -201,11 +204,9 @@ class MainFSM
             // press_button_srv.request.button_pose.pose = fake_button_pose;
 
             // Real button pose
-            geometry_msgs::TransformStamped transformStamped;
-            tf2_ros::Buffer tfBuffer;
-            tf2_ros::TransformListener tfListener(tfBuffer);
+            geometry_msgs::TransformStamped redButtonTransform;
             try{
-                transformStamped = tfBuffer.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0));
+                redButtonTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
             }
             catch (tf2::TransformException &ex) {
@@ -214,12 +215,14 @@ class MainFSM
                 ROS_ERROR("Tranform btw franka_left_link0 and task_board_red_button_link NOT found!");
                 return false;
             }
-            ROS_ERROR("HERE");
             geometry_msgs::Pose red_button_pose;
-            red_button_pose.orientation = transformStamped.transform.rotation;
-            red_button_pose.position.x = transformStamped.transform.translation.x;
-            red_button_pose.position.y = transformStamped.transform.translation.y;
-            red_button_pose.position.z = transformStamped.transform.translation.z;
+            red_button_pose.orientation = redButtonTransform.transform.rotation;
+            red_button_pose.position.x = redButtonTransform.transform.translation.x;
+            red_button_pose.position.y = redButtonTransform.transform.translation.y;
+            red_button_pose.position.z = redButtonTransform.transform.translation.z;
+
+            ROS_INFO_STREAM("Red button pose: " << red_button_pose.position.x << ", " << red_button_pose.position.y << ", " << red_button_pose.position.z);
+            ROS_INFO_STREAM("Red button orientation: " << red_button_pose.orientation.x << ", " << red_button_pose.orientation.y << ", " << red_button_pose.orientation.z << ", " << red_button_pose.orientation.w);
 
             press_button_srv.request.button_pose.pose = red_button_pose;
 
