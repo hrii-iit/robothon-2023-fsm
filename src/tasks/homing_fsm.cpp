@@ -55,7 +55,7 @@ class HomingFSM
 
             // Move to an approach pose w.r.t. the world frame
             geometry_msgs::Pose approach_pose = req.home_pose.pose;
-            approach_pose.position.z += 0.02;
+            //approach_pose.position.z += 0.02;
             waypoints.push_back(approach_pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
@@ -66,26 +66,7 @@ class HomingFSM
                 return true;
             }
 
-            waypoints.push_back(req.home_pose.pose);
-
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-            {
-                res.success = false;
-                res.message = req.robot_id+" failed to press the button pose.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-            }
-
-            waypoints.erase(waypoints.begin());
-            waypoints.push_back(approach_pose);
-
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-            {
-                res.success = false;
-                res.message = req.robot_id+" failed to return to the approach pose.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-            }
+            ros::Duration(5).sleep();
 
             res.success = true;
             res.message = "";

@@ -121,10 +121,10 @@
 
         </node>
 
-        
+        <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="move_slider_fsm" name="move_slider_fsm" output="screen" respawn="false"/>
-        <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
+        
     </group>
 
     <node if="$(arg launch_rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(arg rviz_config_file)"/>
