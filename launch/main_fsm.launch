@@ -23,6 +23,7 @@
     <arg name="left_robot_controller" default="cart_hybrid_motion_force_controller"/>
     <!-- <arg name="left_robot_controller" default="matlogger"/> -->
     <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/desired_tool_pose"/>
+
     <!-- <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/> -->
     <!-- <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/equilibrium_pose"/> -->
     <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/franka_left_cart_hybrid_motion_force_controller.yaml"/>
@@ -121,6 +122,7 @@
         </node>
 
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
+        <node pkg="hrii_task_board_fsm" type="move_slider_fsm" name="move_slider_fsm" output="screen" respawn="false"/>
     </group>
 
     <node if="$(arg launch_rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(arg rviz_config_file)"/>

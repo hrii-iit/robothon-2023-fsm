@@ -3,7 +3,7 @@
     <arg name="sim" default="true"/>
     <arg name="controller"  default="cart_hybrid_motion_force_controller"     doc="Which example controller should be started? (One of {cartesian_impedance,model,force,joint_position,joint_velocity}_example_controller)" />
     <arg name="controller_config_file" default="" doc="Controller config file .yaml" />
-    <arg name="controller_desired_pose_topic" default="$(arg controller)/desired_tool_pose"/>
+    <!-- <arg name="controller_desired_pose_topic" default="$(arg controller)/desired_tool_pose"/> -->
 
     <arg name="launch_gripper" default="no_gripper" doc="Select the gripper you want 
         to apply to the robot flange from this list: https://gitlab.iit.it/hrii/robotics/common/hrii_robot_interface/-/blob/noetic-devel/hrii_gri_interface/urdf/all_grippers.urdf.xacro"/>
@@ -123,6 +123,7 @@
         <arg name="inertial_frame_name" value="$(arg arm_id)_link0"/>
         <arg name="moving_frame_name" value="$(arg arm_id)_EE"/>
         <arg name="desired_pose_topic" value="$(arg controller_desired_pose_topic)"/>
+        <!-- <arg name="desired_pose_topic" value="cartesian_impedance_example_controller/equilibrium_pose"/> -->
         <arg name="debug_mode" value="false"/>
     </include>
 
