@@ -1,5 +1,5 @@
 string robot_id
-geometry_msgs/PoseStamped slider_pose
+geometry_msgs/PoseStamped home_pose
 ---
 bool success
 string message
