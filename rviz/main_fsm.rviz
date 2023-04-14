@@ -256,7 +256,7 @@ Visualization Manager:
           Show Axes: false
           Show Descriptions: true
           Show Visual Aids: false
-          Update Topic: /franka_left/equilibrium_pose_marker/update
+          Update Topic: /franka_right/equilibrium_pose_marker/update
           Value: false
         - Alpha: 1
           Axes Length: 0.10000000149011612
@@ -271,7 +271,7 @@ Visualization Manager:
           Shaft Length: 1
           Shaft Radius: 0.05000000074505806
           Shape: Axes
-          Topic: /franka_right/cartesian_impedance_example_controller/equilibrium_pose
+          Topic: /franka_right/cart_hybrid_motion_force_controller/desired_tool_pose
           Unreliable: false
           Value: true
       Enabled: true

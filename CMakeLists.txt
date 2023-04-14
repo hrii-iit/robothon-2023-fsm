@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_service_files(FILES
   PressButton.srv
+  MoveSlider.srv
 )
 
 generate_messages(
@@ -47,3 +48,8 @@ add_executable(${PROJECT_NAME}_press_button_fsm src/tasks/press_button_fsm.cpp)
 set_target_properties(${PROJECT_NAME}_press_button_fsm PROPERTIES OUTPUT_NAME "press_button_fsm")
 add_dependencies(${PROJECT_NAME}_press_button_fsm ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_press_button_fsm ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_move_slider_fsm src/tasks/move_slider_fsm.cpp)
+set_target_properties(${PROJECT_NAME}_move_slider_fsm PROPERTIES OUTPUT_NAME "move_slider_fsm")
+add_dependencies(${PROJECT_NAME}_move_slider_fsm ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_move_slider_fsm ${catkin_LIBRARIES})

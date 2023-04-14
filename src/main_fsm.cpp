@@ -1,5 +1,8 @@
 #include "ros/ros.h"
 #include "hrii_task_board_fsm/PressButton.h"
+#include "hrii_task_board_fsm/MoveSlider.h"
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
 
 class MainFSM
 {
@@ -8,6 +11,10 @@ class MainFSM
         {
             press_button_activation_service_name_ = "press_button_fsm/activate";
             press_button_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::PressButton>(press_button_activation_service_name_);
+
+            move_slider_activation_service_name_ = "move_slider_fsm/activate";
+            move_slider_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::MoveSlider>(move_slider_activation_service_name_);
+
             state_ = MainFSM::states::HOMING;
         }
 
@@ -55,6 +62,7 @@ class MainFSM
                     
                 case MainFSM::states::PRESS_RED_BUTTON:
                 {
+                    ROS_INFO("- - - PRESS RED BUTTON STATE - - -");
                     if (pressRedButton())
                         state_ = MainFSM::states::MOVE_SLIDER;
                     else
@@ -65,7 +73,12 @@ class MainFSM
 
                 case MainFSM::states::MOVE_SLIDER:
                 {
-                    /* code */
+                    ROS_INFO("- - - MOVE SLIDER STATE - - -");
+                    if (moveSlider())
+                        state_ = MainFSM::states::OPEN_DOOR;
+                    else
+                        state_ = MainFSM::states::ERROR;
+                        // or MOVE_SLIDER
                     break;
                 }
 
@@ -117,6 +130,9 @@ class MainFSM
         std::string press_button_activation_service_name_;
         ros::ServiceClient press_button_activation_client_;
 
+        std::string move_slider_activation_service_name_;
+        ros::ServiceClient move_slider_activation_client_;
+
         // Robots attributs
         std::string left_robot_id_, right_robot_id_;
 
@@ -138,6 +154,8 @@ class MainFSM
 
             hrii_task_board_fsm::PressButton press_button_srv;
             press_button_srv.request.robot_id = left_robot_id_;
+
+            // Fake button pose
             geometry_msgs::Pose fake_button_pose;
             fake_button_pose.position.x = 0.3;
             fake_button_pose.position.y = 0.0;
@@ -147,6 +165,29 @@ class MainFSM
             fake_button_pose.orientation.z = 0.0;
             fake_button_pose.orientation.w = 0.0;
             press_button_srv.request.button_pose.pose = fake_button_pose;
+
+            // // Real button pose
+            // geometry_msgs::TransformStamped transformStamped;
+            // tf2_ros::Buffer tfBuffer;
+            // tf2_ros::TransformListener tfListener(tfBuffer);
+            // try{
+            //     transformStamped = tfBuffer.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0));
+            //     ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
+            // }
+            // catch (tf2::TransformException &ex) {
+            //     ROS_WARN("%s",ex.what());
+            //     ros::Duration(1.0).sleep();
+            //     ROS_ERROR("Tranform btw franka_left_link0 and task_board_red_button_link NOT found!");
+            //     return false;
+            // }
+            // ROS_ERROR("HERE");
+            // geometry_msgs::Pose red_button_pose;
+            // red_button_pose.orientation = transformStamped.transform.rotation;
+            // red_button_pose.position.x = transformStamped.transform.translation.x;
+            // red_button_pose.position.y = transformStamped.transform.translation.y;
+            // red_button_pose.position.z = transformStamped.transform.translation.z;
+
+            // press_button_srv.request.button_pose.pose = red_button_pose;
 
             if (!press_button_activation_client_.call(press_button_srv))
             {
@@ -161,6 +202,38 @@ class MainFSM
             ROS_INFO("Button pressed.");
             return true;
         }
+
+        bool moveSlider()
+        {
+            ROS_INFO("Moving the slider...");
+
+            hrii_task_board_fsm::MoveSlider move_slider_srv;
+            move_slider_srv.request.robot_id = right_robot_id_;
+            geometry_msgs::Pose fake_button_pose;
+            fake_button_pose.position.x = 0.3;
+            fake_button_pose.position.y = 0.0;
+            fake_button_pose.position.z = 0.0;
+            fake_button_pose.orientation.x = 1.0;
+            fake_button_pose.orientation.y = 0.0;
+            fake_button_pose.orientation.z = 0.0;
+            fake_button_pose.orientation.w = 0.0;
+            move_slider_srv.request.button_pose.pose = fake_button_pose;
+
+            if (!move_slider_activation_client_.call(move_slider_srv))
+            {
+                ROS_ERROR("Error calling moving slider activation service.");
+                return false;
+            }
+            else if (!move_slider_srv.response.success)
+            {
+                ROS_ERROR("Failure moving slider. Exiting.");
+                return false;
+            }
+            ROS_INFO("Slide Moved.");
+            return true;
+        }
+
+
 }; // class MainFSM
 
 int main(int argc, char **argv)
