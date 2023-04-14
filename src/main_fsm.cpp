@@ -3,6 +3,7 @@
 #include "hrii_task_board_fsm/MoveSlider.h"
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <controller_manager_msgs/ListControllers.h>
 
 class MainFSM
 {
@@ -31,6 +32,35 @@ class MainFSM
                 return false;
             }
 
+            // Initialize controller status service
+            left_robot_controller_manager_status_service_name_ = "/" + left_robot_id_ + "/controller_manager/list_controllers";
+            left_robot_controller_manager_status_client_ =  nh_.serviceClient<controller_manager_msgs::ListControllers>(left_robot_controller_manager_status_service_name_);
+
+            // Wait for controllers status service
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(left_robot_controller_manager_status_service_name_) << " ROS service...");
+            left_robot_controller_manager_status_client_.waitForExistence();
+
+            // Check if controller status is running
+            controller_manager_msgs::ListControllers left_robot_controller_list_srv;
+            bool controller_started_flag = false;
+            do{
+
+                if (!left_robot_controller_manager_status_client_.call(left_robot_controller_list_srv))
+                {
+                    ROS_ERROR("Error calling left robot controller manager status service.");
+                    return false;
+                }
+                else
+                {
+                    for (const auto& controller : left_robot_controller_list_srv.response.controller){
+                        if(controller.name == "cart_hybrid_motion_force_controller" && controller.state == "running")
+                            controller_started_flag = true;
+                    }
+                }
+
+            }while(!controller_started_flag);
+
+            // Wait for task services activation
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
             press_button_activation_client_.waitForExistence();
 
@@ -127,6 +157,10 @@ class MainFSM
     private:
         // ROS attributes
         ros::NodeHandle nh_, nh_priv_;
+        
+        std::string left_robot_controller_manager_status_service_name_;
+        ros::ServiceClient left_robot_controller_manager_status_client_;
+
         std::string press_button_activation_service_name_;
         ros::ServiceClient press_button_activation_client_;
 
@@ -156,38 +190,38 @@ class MainFSM
             press_button_srv.request.robot_id = left_robot_id_;
 
             // Fake button pose
-            geometry_msgs::Pose fake_button_pose;
-            fake_button_pose.position.x = 0.3;
-            fake_button_pose.position.y = 0.0;
-            fake_button_pose.position.z = 0.3;
-            fake_button_pose.orientation.x = 1.0;
-            fake_button_pose.orientation.y = 0.0;
-            fake_button_pose.orientation.z = 0.0;
-            fake_button_pose.orientation.w = 0.0;
-            press_button_srv.request.button_pose.pose = fake_button_pose;
+            // geometry_msgs::Pose fake_button_pose;
+            // fake_button_pose.position.x = 0.3;
+            // fake_button_pose.position.y = 0.0;
+            // fake_button_pose.position.z = 0.3;
+            // fake_button_pose.orientation.x = 1.0;
+            // fake_button_pose.orientation.y = 0.0;
+            // fake_button_pose.orientation.z = 0.0;
+            // fake_button_pose.orientation.w = 0.0;
+            // press_button_srv.request.button_pose.pose = fake_button_pose;
 
-            // // Real button pose
-            // geometry_msgs::TransformStamped transformStamped;
-            // tf2_ros::Buffer tfBuffer;
-            // tf2_ros::TransformListener tfListener(tfBuffer);
-            // try{
-            //     transformStamped = tfBuffer.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0));
-            //     ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
-            // }
-            // catch (tf2::TransformException &ex) {
-            //     ROS_WARN("%s",ex.what());
-            //     ros::Duration(1.0).sleep();
-            //     ROS_ERROR("Tranform btw franka_left_link0 and task_board_red_button_link NOT found!");
-            //     return false;
-            // }
-            // ROS_ERROR("HERE");
-            // geometry_msgs::Pose red_button_pose;
-            // red_button_pose.orientation = transformStamped.transform.rotation;
-            // red_button_pose.position.x = transformStamped.transform.translation.x;
-            // red_button_pose.position.y = transformStamped.transform.translation.y;
-            // red_button_pose.position.z = transformStamped.transform.translation.z;
+            // Real button pose
+            geometry_msgs::TransformStamped transformStamped;
+            tf2_ros::Buffer tfBuffer;
+            tf2_ros::TransformListener tfListener(tfBuffer);
+            try{
+                transformStamped = tfBuffer.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0));
+                ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
+            }
+            catch (tf2::TransformException &ex) {
+                ROS_WARN("%s",ex.what());
+                ros::Duration(1.0).sleep();
+                ROS_ERROR("Tranform btw franka_left_link0 and task_board_red_button_link NOT found!");
+                return false;
+            }
+            ROS_ERROR("HERE");
+            geometry_msgs::Pose red_button_pose;
+            red_button_pose.orientation = transformStamped.transform.rotation;
+            red_button_pose.position.x = transformStamped.transform.translation.x;
+            red_button_pose.position.y = transformStamped.transform.translation.y;
+            red_button_pose.position.z = transformStamped.transform.translation.z;
 
-            // press_button_srv.request.button_pose.pose = red_button_pose;
+            press_button_srv.request.button_pose.pose = red_button_pose;
 
             if (!press_button_activation_client_.call(press_button_srv))
             {
