@@ -14,7 +14,7 @@
     <arg name="left_robot_ip" default="192.168.0.102"/>
     <arg name="left_robot_launch_gripper" default="franka_gripper_and_realsense_d435"/>
     <arg name="left_robot_gripper_brand" default="franka_gripper"/>
-    <arg name="left_robot_gripper_config_file" default="$(find hrii_franka_gripper_interface)/config/franka_gripper.yaml"/>
+    <arg name="left_robot_gripper_config_file" default="$(find hrii_franka_gripper_interface)/config/controllers/franka_gripper.yaml"/>
     <arg name="left_robot_F_T_NE" default="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.1034 1" doc="End effector pose wrt robot flange. The matrix is transposed"/>
     <arg name="left_robot_gripper_mass" default="0.760"/>
     <!-- <arg name="left_robot_launch_gripper" default="no_gripper"/> -->
@@ -26,7 +26,7 @@
 
     <!-- <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/> -->
     <!-- <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/equilibrium_pose"/> -->
-    <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/franka_left_cart_hybrid_motion_force_controller.yaml"/>
+    <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/controllers/franka_left_cart_hybrid_motion_force_controller.yaml"/>
     <arg name="left_robot_init_pose_x" default="0"/>
     <arg name="left_robot_init_pose_y" default="-0.45"/>
     <arg name="left_robot_init_pose_z" default="0"/>
@@ -115,11 +115,10 @@
     
     <!-- Launch the FSMs -->
     <group ns="fsm">
-        <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
+        <!-- <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
             <param name="right_robot_id" value="$(arg right_robot_id)"/>
-
-        </node>
+        </node> -->
 
         <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
