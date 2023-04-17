@@ -27,10 +27,10 @@
     <!-- <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/> -->
     <!-- <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/equilibrium_pose"/> -->
     <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/franka_left_cart_hybrid_motion_force_controller.yaml"/>
-    <arg name="left_robot_init_pose_x" default="0"/>
-    <arg name="left_robot_init_pose_y" default="-0.45"/>
-    <arg name="left_robot_init_pose_z" default="0"/>
-    <arg name="left_robot_init_pose_yaw" default="1.5707"/>
+    <arg name="left_robot_init_pose_x" default="-0.420"/>
+    <arg name="left_robot_init_pose_y" default="0.323"/>
+    <arg name="left_robot_init_pose_z" default="0"/> <!-- -0.006 in real robot -->
+    <arg name="left_robot_init_pose_yaw" default="0"/>
     <arg name="left_robot_launch_interactive_marker" default="false"/>
 
     <!-- Right robot arguments -->
