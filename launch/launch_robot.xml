@@ -99,6 +99,9 @@
 
         <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="$(arg controller)"/>
         
+        <!-- Static tf to connect world and robots -->
+        <node pkg="tf2_ros" type="static_transform_publisher" name="world_franka_left_br" args="-0.420 0.323 -0.006 0 0 0 1 world franka_left_link0"/>
+
     </group>
 
     <node pkg="dynamic_reconfigure" type="dynparam" name="dynamic_reconfigure_load" args="load $(arg controller)/dyn_rec_ctrl_param $(arg controller_config_file)"/>

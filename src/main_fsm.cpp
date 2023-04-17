@@ -97,14 +97,14 @@ class MainFSM
                 {
                     // Board detection
                     ROS_INFO("- - - BOARD DETECTION STATE - - -");
-                    state_ = MainFSM::states::PRESS_RED_BUTTON;
+                    state_ = MainFSM::states::PRESS_BLUE_BUTTON;
                     break;
                 }
                     
-                case MainFSM::states::PRESS_RED_BUTTON:
+                case MainFSM::states::PRESS_BLUE_BUTTON:
                 {
-                    ROS_INFO("- - - PRESS RED BUTTON STATE - - -");
-                    if (pressRedButton())
+                    ROS_INFO("- - - PRESS BLUE BUTTON STATE - - -");
+                    if (pressBlueButton())
                         state_ = MainFSM::states::MOVE_SLIDER;
                     else
                         state_ = MainFSM::states::ERROR;
@@ -142,7 +142,7 @@ class MainFSM
                     break;
                 }
 
-                case MainFSM::states::PRESS_BLUE_BUTTON:
+                case MainFSM::states::PRESS_RED_BUTTON:
                 {
                     /* code */
                     break;
@@ -231,6 +231,65 @@ class MainFSM
             return true;
         }
 
+        bool pressBlueButton()
+        {
+            ROS_INFO("Pressing the blue button...");
+
+            hrii_task_board_fsm::PressButton press_button_srv;
+            press_button_srv.request.robot_id = left_robot_id_;
+
+            // Fake button pose
+            // geometry_msgs::Pose fake_button_pose;
+            // fake_button_pose.position.x = 0.3;
+            // fake_button_pose.position.y = 0.0;
+            // fake_button_pose.position.z = 0.3;
+            // fake_button_pose.orientation.x = 1.0;
+            // fake_button_pose.orientation.y = 0.0;
+            // fake_button_pose.orientation.z = 0.0;
+            // fake_button_pose.orientation.w = 0.0;
+            // press_button_srv.request.button_pose.pose = fake_button_pose;
+            // ROS_WARN_STREAM("Using fake button pose!");
+
+            // Real button pose
+            geometry_msgs::TransformStamped blueButtonTransform;
+            try{
+                blueButtonTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_blue_button_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO("Tranform btw franka_left_link0 and task_board_blue_button_link found!");
+            }
+            catch (tf2::TransformException &ex) {
+                ROS_WARN("%s",ex.what());
+                ros::Duration(1.0).sleep();
+                ROS_ERROR("Tranform btw franka_left_link0 and task_board_blue_button_link NOT found!");
+                return false;
+            }
+            geometry_msgs::Pose blue_button_pose;
+            blue_button_pose.position.x = blueButtonTransform.transform.translation.x;
+            blue_button_pose.position.y = blueButtonTransform.transform.translation.y;
+            blue_button_pose.position.z = blueButtonTransform.transform.translation.z;
+            blue_button_pose.orientation.x = 1.0;
+            blue_button_pose.orientation.y = 0.0;
+            blue_button_pose.orientation.z = 0.0;
+            blue_button_pose.orientation.w = 0.0;
+
+            ROS_INFO_STREAM("Red button pose: " << blue_button_pose.position.x << ", " << blue_button_pose.position.y << ", " << blue_button_pose.position.z);
+            ROS_INFO_STREAM("Red button orientation: " << blue_button_pose.orientation.x << ", " << blue_button_pose.orientation.y << ", " << blue_button_pose.orientation.z << ", " << blue_button_pose.orientation.w);
+
+            press_button_srv.request.button_pose.pose = blue_button_pose;
+
+            if (!press_button_activation_client_.call(press_button_srv))
+            {
+                ROS_ERROR("Error calling press button activation service.");
+                return false;
+            }
+            else if (!press_button_srv.response.success)
+            {
+                ROS_ERROR("Failure pressing button. Exiting.");
+                return false;
+            }
+            ROS_INFO("Button pressed.");
+            return true;
+        }
+
         bool pressRedButton()
         {
             ROS_INFO("Pressing the red button...");
@@ -248,6 +307,7 @@ class MainFSM
             // fake_button_pose.orientation.z = 0.0;
             // fake_button_pose.orientation.w = 0.0;
             // press_button_srv.request.button_pose.pose = fake_button_pose;
+            // ROS_WARN_STREAM("Using fake button pose!");
 
             // Real button pose
             geometry_msgs::TransformStamped redButtonTransform;
@@ -262,7 +322,6 @@ class MainFSM
                 return false;
             }
             geometry_msgs::Pose red_button_pose;
-            //red_button_pose.orientation = redButtonTransform.transform.rotation;
             red_button_pose.position.x = redButtonTransform.transform.translation.x;
             red_button_pose.position.y = redButtonTransform.transform.translation.y;
             red_button_pose.position.z = redButtonTransform.transform.translation.z;

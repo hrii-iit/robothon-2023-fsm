@@ -95,7 +95,7 @@ class PressButtonFSM
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "dummy_fsm");
+    ros::init(argc, argv, "press_button_fsm");
     ros::NodeHandle nh("~");
 
     PressButtonFSM fsm(nh);

@@ -97,28 +97,29 @@
             <arg name="gui" value="$(eval not arg('sim_headless'))"/>
             <arg name="use_sim_time" value="true"/>
         </include>
-
-        <include file="$(find hrii_gazebo_utils)/launch/spawn_urdf.launch">
-            <arg name="model_name" value="task_board"/>
-            <arg name="x_spawn_pose" value="0"/>
-            <arg name="y_spawn_pose" value="0"/>
-            <arg name="z_spawn_pose" value="0"/>
-            <arg name="roll_spawn_pose" value="0"/>
-            <arg name="pitch_spawn_pose" value="0"/>
-            <arg name="yaw_spawn_pose" value="0"/>
-            <arg name="urdf_filepath" value="$(find hrii_task_board_description)/robots/task_board.urdf.xacro"/>
-        </include>
-
-        <node pkg="tf2_ros" type="static_transform_publisher" name="task_board_test_br" args="0 0 0 0 0 0 1 world task_board_base_link"/>
-
     </group>
+
+    <!-- Launch task board URDF -->
+    <include file="$(find hrii_gazebo_utils)/launch/spawn_urdf.launch">
+        <arg name="model_name" value="task_board"/>
+        <arg name="x_spawn_pose" value="0"/>
+        <arg name="y_spawn_pose" value="0"/>
+        <arg name="z_spawn_pose" value="0"/>
+        <arg name="roll_spawn_pose" value="0"/>
+        <arg name="pitch_spawn_pose" value="0"/>
+        <arg name="yaw_spawn_pose" value="0"/>
+        <arg name="urdf_filepath" value="$(find hrii_task_board_description)/robots/task_board.urdf.xacro"/>
+    </include>
+
+    <!-- Temporary! In the future given by perception module -->
+    <!-- Link from world to task_board_base_link -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="task_board_test_br" args="0 0 0 0 0 0 1 world task_board_base_link"/>
     
     <!-- Launch the FSMs -->
     <group ns="fsm">
         <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
             <param name="right_robot_id" value="$(arg right_robot_id)"/>
-
         </node>
 
         <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
