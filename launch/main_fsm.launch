@@ -15,7 +15,7 @@
     <arg name="left_robot_launch_gripper" default="franka_gripper_and_realsense_d435"/>
     <arg name="left_robot_gripper_brand" default="franka_gripper"/>
     <arg name="left_robot_gripper_config_file" default="$(find hrii_franka_gripper_interface)/config/franka_gripper.yaml"/>
-    <arg name="left_robot_F_T_NE" default="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.1034 1" doc="End effector pose wrt robot flange. The matrix is transposed"/>
+    <arg name="left_robot_F_T_NE" default="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.137 1" doc="End effector pose wrt robot flange. The matrix is transposed"/>
     <arg name="left_robot_gripper_mass" default="0.760"/>
     <!-- <arg name="left_robot_launch_gripper" default="no_gripper"/> -->
     <arg name="left_robot_urdf" default="$(find franka_description)/robots/panda_all_grippers/panda_all_grippers.urdf.xacro"/>
