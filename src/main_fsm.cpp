@@ -208,9 +208,9 @@ class MainFSM
 
             // Home pose
             geometry_msgs::Pose home_pose;
-            home_pose.position.x = 0.383;
-            home_pose.position.y = -0.253;
-            home_pose.position.z = 0.379;
+            home_pose.position.x = 0.351;
+            home_pose.position.y = -0.233;
+            home_pose.position.z = 0.441;
             home_pose.orientation.x = -0.693;
             home_pose.orientation.y = 0.706;
             home_pose.orientation.z = -0.104;
