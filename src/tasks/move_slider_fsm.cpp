@@ -54,7 +54,7 @@ class MoveSliderFSM
             ROS_INFO("MOVE SLIDER FSM STARTED!");
 
             // Move to an approach pose w.r.t. the world frame
-            geometry_msgs::Pose approach_pose = req.button_pose.pose;
+            geometry_msgs::Pose approach_pose = req.slider_pose.pose;
             approach_pose.position.z += 0.02;
             waypoints.push_back(approach_pose);
 
@@ -66,7 +66,7 @@ class MoveSliderFSM
                 return true;
             }
 
-            waypoints.push_back(req.button_pose.pose);
+            waypoints.push_back(req.slider_pose.pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {

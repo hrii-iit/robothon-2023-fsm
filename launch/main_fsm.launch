@@ -2,7 +2,7 @@
 <launch>
     <!-- Simulation arguments -->
     <arg name="sim" default="true" doc="If true, launch the gazebo simulation" />
-    <arg name="sim_headless" default="false" doc="If true, launch the gazebo simulation" />
+    <arg name="sim_headless" default="false" doc="If true, launch with no Gazebo GUI" />
     <arg name="gazebo_world" default="$(find gazebo_ros)/worlds/empty_world.world"/>
 
     <!-- RViz arguments -->
