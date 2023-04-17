@@ -56,6 +56,7 @@ class PressButtonFSM
             // Move to an approach pose w.r.t. the world frame
             geometry_msgs::Pose approach_pose = req.button_pose.pose;
             approach_pose.position.z += 0.02;
+
             waypoints.push_back(approach_pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
@@ -66,6 +67,7 @@ class PressButtonFSM
                 return true;
             }
 
+            // Move to the button pose w.r.t the world frame
             waypoints.push_back(req.button_pose.pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
@@ -77,6 +79,8 @@ class PressButtonFSM
             }
 
             waypoints.erase(waypoints.begin());
+
+            // We move the robot back to the approach pose upon the button
             waypoints.push_back(approach_pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))

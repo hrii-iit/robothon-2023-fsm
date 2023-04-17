@@ -14,9 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 add_service_files(FILES
-  PressButton.srv
-  MoveSlider.srv
+  DesiredSliderDisplacement.srv
   Homing.srv
+  MoveSlider.srv
+  PressButton.srv
 )
 
 generate_messages(
@@ -39,6 +40,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen3_INCLUDE_DIRS}
 )
+
+catkin_install_python(PROGRAMS src/imaging_node.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 
 add_executable(${PROJECT_NAME}_main_fsm src/main_fsm.cpp)
 set_target_properties(${PROJECT_NAME}_main_fsm PROPERTIES OUTPUT_NAME "main_fsm")

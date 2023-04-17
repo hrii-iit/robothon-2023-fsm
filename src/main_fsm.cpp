@@ -1,7 +1,8 @@
 #include "ros/ros.h"
-#include "hrii_task_board_fsm/PressButton.h"
-#include "hrii_task_board_fsm/MoveSlider.h"
+#include "hrii_task_board_fsm/DesiredSliderDisplacement.h"
 #include "hrii_task_board_fsm/Homing.h"
+#include "hrii_task_board_fsm/MoveSlider.h"
+#include "hrii_task_board_fsm/PressButton.h"
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <controller_manager_msgs/ListControllers.h>
@@ -19,6 +20,9 @@ class MainFSM
 
             move_slider_activation_service_name_ = "move_slider_fsm/activate";
             move_slider_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::MoveSlider>(move_slider_activation_service_name_);
+
+            slider_displacement_service_name_ = "/slider_desired_pose";
+            slider_displacement_client_ = nh_.serviceClient<hrii_task_board_fsm::DesiredSliderDisplacement>(slider_displacement_service_name_);
 
             state_ = MainFSM::states::HOMING;
         }
@@ -181,6 +185,9 @@ class MainFSM
         std::string move_slider_activation_service_name_;
         ros::ServiceClient move_slider_activation_client_;
 
+        std::string slider_displacement_service_name_;
+        ros::ServiceClient slider_displacement_client_;
+        
         tf2_ros::Buffer tfBuffer;
         tf2_ros::TransformListener tfListener{tfBuffer};
 
@@ -353,17 +360,47 @@ class MainFSM
         {
             ROS_INFO("Moving the slider...");
 
+            hrii_task_board_fsm::DesiredSliderDisplacement slider_displacement_srv;
             hrii_task_board_fsm::MoveSlider move_slider_srv;
-            move_slider_srv.request.robot_id = right_robot_id_;
-            geometry_msgs::Pose fake_button_pose;
-            fake_button_pose.position.x = 0.3;
-            fake_button_pose.position.y = 0.0;
-            fake_button_pose.position.z = 0.0;
-            fake_button_pose.orientation.x = 1.0;
-            fake_button_pose.orientation.y = 0.0;
-            fake_button_pose.orientation.z = 0.0;
-            fake_button_pose.orientation.w = 0.0;
-            move_slider_srv.request.slider_pose.pose = fake_button_pose;
+            move_slider_srv.request.robot_id = left_robot_id_;
+            
+            // Real slider pose
+            geometry_msgs::TransformStamped sliderTransform;
+            try{
+                sliderTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_starting_slider_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO("Tranform btw franka_left_link0 and task_board_starting_slider_link found!");
+            }
+            catch (tf2::TransformException &ex) {
+                ROS_WARN("%s",ex.what());
+                ros::Duration(1.0).sleep();
+                ROS_ERROR("Tranform btw franka_left_link0 and task_board_starting_slider_link NOT found!");
+                return false;
+            }
+            geometry_msgs::Pose slider_pose;
+            //slider_pose.orientation = sliderTransform.transform.rotation;
+            slider_pose.position.x = sliderTransform.transform.translation.x;
+            slider_pose.position.y = sliderTransform.transform.translation.y;
+            slider_pose.position.z = sliderTransform.transform.translation.z;
+            slider_pose.orientation.x = 1.0;
+            slider_pose.orientation.y = 0.0;
+            slider_pose.orientation.z = 0.0;
+            slider_pose.orientation.w = 0.0;
+            move_slider_srv.request.slider_pose.pose = slider_pose;
+
+            // We call the service to get the first slider displacement from imaging side
+            slider_displacement_client_.call(slider_displacement_srv);
+            double displacement_1 = slider_displacement_srv.response.displacement;
+            
+            ROS_INFO_STREAM("First displacement: " << displacement_1);
+
+            // Pose of the first reference point where we have to move the slider
+            geometry_msgs::Pose reference_pose_1;
+            reference_pose_1.position = slider_pose.position; //we assign to the first reference point the same initial pose of the slider
+            reference_pose_1.position.y += displacement_1;          //then we add the dispplacement along y-axis
+            reference_pose_1.orientation = slider_pose.orientation;     //keeping the same orientation of the initial slider pose
+
+            move_slider_srv.request.reference_pose.pose = reference_pose_1; 
+            move_slider_srv.request.times = 1;
 
             if (!move_slider_activation_client_.call(move_slider_srv))
             {
@@ -375,7 +412,36 @@ class MainFSM
                 ROS_ERROR("Failure moving slider. Exiting.");
                 return false;
             }
-            ROS_INFO("Slide Moved.");
+            ROS_INFO("Slide Moved for the first time.");
+
+            // We call the service to get the second slider displacement from imaging side
+            slider_displacement_client_.call(slider_displacement_srv);
+            double displacement_2 = slider_displacement_srv.response.displacement;
+
+            ROS_INFO_STREAM("Second displacement: " << displacement_2);
+
+            geometry_msgs::Pose reference_pose_2;
+            reference_pose_2.position = slider_pose.position; //we assign to the first reference point the same initial pose of the slider
+            reference_pose_2.position.y += displacement_2;          //then we add the dispplacement along y-axis
+            reference_pose_2.orientation = slider_pose.orientation;     //keeping the same orientation of the initial slider pose
+
+            move_slider_srv.request.reference_pose.pose = reference_pose_2;
+            move_slider_srv.request.times = 2; 
+
+            if (!move_slider_activation_client_.call(move_slider_srv))
+            {
+                ROS_ERROR("Error calling moving slider activation service.");
+                return false;
+            }
+            else if (!move_slider_srv.response.success)
+            {
+                ROS_ERROR("Failure moving slider. Exiting.");
+                return false;
+            }
+            ROS_INFO("Slide Moved for the second time.");
+
+
+
             return true;
         }
 

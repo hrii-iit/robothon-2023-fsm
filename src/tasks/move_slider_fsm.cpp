@@ -51,42 +51,71 @@ class MoveSliderFSM
             std::vector<geometry_msgs::Pose> waypoints;
             double execution_time = 5.0;
 
-            ROS_INFO("MOVE SLIDER FSM STARTED!");
+            if(req.times == 1)
+            {
+                ROS_INFO("MOVE SLIDER FSM STARTED! Approaching for the first time the slider");
+                // Move to an approach pose upon the slider (w.r.t. the world frame)
+                geometry_msgs::Pose approach_pose = req.slider_pose.pose;
+                approach_pose.position.z += 0.02;
+                waypoints.push_back(approach_pose);
 
-            // Move to an approach pose w.r.t. the world frame
-            geometry_msgs::Pose approach_pose = req.slider_pose.pose;
-            approach_pose.position.z += 0.02;
-            waypoints.push_back(approach_pose);
+                if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+                {   
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the first approaching slider pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+                }
+
+                // Move to the slider pose (w.r.t. the world frame)
+                waypoints.push_back(req.slider_pose.pose);
+
+                if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+                {
+                res.success = false;
+                res.message = req.robot_id+" failed to grasp the slider.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+                }
+
+                res.message = " Slider grasped";
+                ROS_INFO(" Slider grasped");
+                waypoints.erase(waypoints.begin());
+            }
+            
+            // Move the slider to the reference point of the screen
+            
+            waypoints.push_back(req.reference_pose.pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the approach pose.";
+                res.message = req.robot_id+" failed to move the slider to the desired pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
 
-            waypoints.push_back(req.slider_pose.pose);
+            ROS_INFO_STREAM(" Succeded in move the robot in the slider pose: " << req.times);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            //Move back to the approach pose upon the slider only if it is the second movement
+
+            if (req.times ==2)
             {
-                res.success = false;
-                res.message = req.robot_id+" failed to move the slider.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
+                // //waypoints.erase(waypoints.begin());
+                // waypoints.push_back(approach_pose);
+
+                // if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+                // {
+                //     res.success = false;
+                //     res.message = req.robot_id+" failed to return to the approach pose.";
+                //     ROS_ERROR_STREAM(res.message);
+                //     return true;
+                // }
+
+                ROS_INFO(" Succeded in move the robot back to approach initial pose");
             }
-
-            waypoints.erase(waypoints.begin());
-            waypoints.push_back(approach_pose);
-
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-            {
-                res.success = false;
-                res.message = req.robot_id+" failed to return to the approach pose.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-            }
-
+            
+            ros::Duration(5).sleep();
             res.success = true;
             res.message = "";
             return true;
@@ -95,7 +124,7 @@ class MoveSliderFSM
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "dummy_fsm");
+    ros::init(argc, argv, "move_slider_fsm");
     ros::NodeHandle nh("~");
 
     MoveSliderFSM fsm(nh);
