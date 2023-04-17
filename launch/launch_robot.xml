@@ -114,11 +114,14 @@
     </node>
 
     <!-- Load gripper interface -->
-    <!-- <include file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
+    <include file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
         <arg name="launch_rviz" value="false"/>
         <arg name="launch_gazebo_world" value="false"/>
         <arg name="arm_prefix" value="$(arg arm_id)"/>
-    </include> -->
+        <arg name="interface_type" value="SIMULATION" if="$(arg sim)"/>
+        <arg name="interface_type" value="HARDWARE" unless="$(arg sim)"/>
+        <arg name="gripper_ip" value="$(arg robot_ip)"/>
+    </include>
 
     <!-- Trajectory planner -->
     <include file="$(find hrii_trajectory_planner)/launch/trajectory_handler.launch">

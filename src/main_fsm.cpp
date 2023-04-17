@@ -271,8 +271,8 @@ class MainFSM
             blue_button_pose.orientation.z = 0.0;
             blue_button_pose.orientation.w = 0.0;
 
-            ROS_INFO_STREAM("Red button pose: " << blue_button_pose.position.x << ", " << blue_button_pose.position.y << ", " << blue_button_pose.position.z);
-            ROS_INFO_STREAM("Red button orientation: " << blue_button_pose.orientation.x << ", " << blue_button_pose.orientation.y << ", " << blue_button_pose.orientation.z << ", " << blue_button_pose.orientation.w);
+            ROS_INFO_STREAM("Blue button pose: " << blue_button_pose.position.x << ", " << blue_button_pose.position.y << ", " << blue_button_pose.position.z);
+            ROS_INFO_STREAM("Blue button orientation: " << blue_button_pose.orientation.x << ", " << blue_button_pose.orientation.y << ", " << blue_button_pose.orientation.z << ", " << blue_button_pose.orientation.w);
 
             press_button_srv.request.button_pose.pose = blue_button_pose;
 

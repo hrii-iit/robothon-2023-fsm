@@ -42,10 +42,10 @@ class PressButtonFSM
             ROS_INFO("Trajectory handler client initialized.");
 
             // Initialize gripper and close it
-            // gripper_ = std::make_shared<GripperInterfaceClientHelper>(req.robot_id+"trajectory_handler/execute_trajectory");
-            // if (!gripper_->init()) return false;
-            // if (!gripper_->close(default_closing_gripper_speed_)) return false;
-            // ROS_INFO("Gripper client initialized.");
+            gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.robot_id+"/gripper");
+            if (!gripper_->init()) return false;
+            if (!gripper_->close(default_closing_gripper_speed_)) return false;
+            ROS_INFO("Gripper client initialized.");
             
 
             std::vector<geometry_msgs::Pose> waypoints;
