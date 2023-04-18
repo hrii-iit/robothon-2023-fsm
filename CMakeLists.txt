@@ -20,6 +20,7 @@ add_service_files(FILES
   MovePlug.srv
   Homing.srv
   BoardDetection.srv
+  OpenDoor.srv
 )
 
 generate_messages(
@@ -72,3 +73,8 @@ add_executable(${PROJECT_NAME}_move_plug_fsm src/tasks/move_plug_fsm.cpp)
 set_target_properties(${PROJECT_NAME}_move_plug_fsm PROPERTIES OUTPUT_NAME "move_plug_fsm")
 add_dependencies(${PROJECT_NAME}_move_plug_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_move_plug_fsm ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_open_door_fsm src/tasks/open_door_fsm.cpp)
+set_target_properties(${PROJECT_NAME}_open_door_fsm PROPERTIES OUTPUT_NAME "open_door_fsm")
+add_dependencies(${PROJECT_NAME}_open_door_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_open_door_fsm ${catkin_LIBRARIES})

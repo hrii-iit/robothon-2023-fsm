@@ -10,8 +10,17 @@
     <arg name="rviz_config_file" default="$(find hrii_task_board_fsm)/rviz/main_fsm.rviz"/>
     
     <!-- FSM arguments -->
-    <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/default_task_order.yaml"/>
-    <!-- <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/custom_task_order.yaml"/> -->
+    <!-- <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/default_task_order.yaml"/> -->
+    <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/custom_task_order.yaml"/>
+
+    <!-- Task board arguments -->
+    <arg name="task_board_publish_manual_tf" default="true"/>
+    <arg name="task_board_init_pose_x" default="0.0"/>
+    <arg name="task_board_init_pose_y" default="0.0"/>
+    <arg name="task_board_init_pose_z" default="0.0"/>
+    <arg name="task_board_init_pose_roll" default="0.0"/>
+    <arg name="task_board_init_pose_pitch" default="0.0"/>
+    <arg name="task_board_init_pose_yaw" default="0.7839"/>
 
     <!-- Left robot arguments -->
     <arg name="left_robot_id" default="franka_left"/>
@@ -104,17 +113,26 @@
 
     <!-- Temporary! In the future given by perception module -->
     <!-- Link from world to task_board_base_link -->
+    <!-- x y z roll pitch yaw -->
     <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="task_board_test_br" args="0 0 0 0 0 0.3826834 0.9238795  world task_board_base_link"/> -->
+    <node if="$(arg task_board_publish_manual_tf)" pkg="tf2_ros" type="static_transform_publisher" name="task_board_test_br" 
+            args="$(arg task_board_init_pose_x)
+                $(arg task_board_init_pose_y)
+                $(arg task_board_init_pose_z)
+                $(arg task_board_init_pose_yaw)
+                $(arg task_board_init_pose_pitch)
+                $(arg task_board_init_pose_roll)
+                world task_board_base_link"/>
 
     <!-- Launch task board URDF -->
     <include file="$(find hrii_gazebo_utils)/launch/spawn_urdf.launch">
         <arg name="model_name" value="task_board"/>
-        <arg name="x_spawn_pose" value="0"/>
-        <arg name="y_spawn_pose" value="0"/>
-        <arg name="z_spawn_pose" value="0"/>
-        <arg name="roll_spawn_pose" value="0"/>
-        <arg name="pitch_spawn_pose" value="0"/>
-        <arg name="yaw_spawn_pose" value="0"/>
+        <arg name="x_spawn_pose" value="$(arg task_board_init_pose_x)"/>
+        <arg name="y_spawn_pose" value="$(arg task_board_init_pose_y)"/>
+        <arg name="z_spawn_pose" value="$(arg task_board_init_pose_z)"/>
+        <arg name="roll_spawn_pose" value="$(arg task_board_init_pose_roll)"/>
+        <arg name="pitch_spawn_pose" value="$(arg task_board_init_pose_pitch)"/>
+        <arg name="yaw_spawn_pose" value="$(arg task_board_init_pose_yaw)"/>
         <arg name="urdf_filepath" value="$(find hrii_task_board_description)/robots/task_board.urdf.xacro"/>
     </include>
     
@@ -129,6 +147,7 @@
         <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="move_slider_fsm" name="move_slider_fsm" output="screen" respawn="false"/>
+        <node pkg="hrii_task_board_fsm" type="open_door_fsm" name="open_door_fsm" output="screen" respawn="false"/>
         
     </group>
 
