@@ -6,7 +6,7 @@ from hrii_task_board_fsm.srv import BoardDetection,BoardDetectionResponse,Desire
 count = 1
 
 def slider_desired_displacement(req):
-    #Computation of the desired pose from imaging section (ToDo)
+    #Computation of the desired pose from perception section (ToDo)
     global count
     if (count == 1):
         desired_displacement = 0.04
@@ -30,12 +30,12 @@ def board_detection(req):
     return BoardDetectionResponse(success)
     
 
-def imaging_server():
-    rospy.init_node('imaging_server')
+def fake_percpetion_server():
+    rospy.init_node('fake_percpetion_server')
     slider_srv = rospy.Service('slider_desired_pose', DesiredSliderDisplacement, slider_desired_displacement)
     board_detection_srv = rospy.Service('/fsm/board_detection', BoardDetection, board_detection)
     print("Ready to communicate the desired displacement.")
     rospy.spin()
 
 if __name__ == "__main__":
-    imaging_server()
+    fake_percpetion_server()
