@@ -24,7 +24,7 @@ class MainFSM
             slider_displacement_service_name_ = "/slider_desired_pose";
             slider_displacement_client_ = nh_.serviceClient<hrii_task_board_fsm::DesiredSliderDisplacement>(slider_displacement_service_name_);
 
-            state_ = MainFSM::states::HOMING;
+            //state_ = MainFSM::states::HOMING;
         }
 
         bool init()

@@ -10,7 +10,8 @@
     <arg name="rviz_config_file" default="$(find hrii_task_board_fsm)/rviz/main_fsm.rviz"/>
     
     <!-- FSM arguments -->
-    <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/default_task_order.yaml"/>
+    <!-- <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/default_task_order.yaml"/> -->
+    <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/custom_task_order.yaml"/>
 
     <!-- Left robot arguments -->
     <arg name="left_robot_id" default="franka_left"/>
@@ -18,6 +19,7 @@
     <arg name="left_robot_launch_gripper" default="franka_gripper_and_realsense_d435"/>
     <arg name="left_robot_gripper_brand" default="franka_gripper"/>
     <arg name="left_robot_gripper_config_file" default="$(find hrii_franka_gripper_interface)/config/franka_gripper.yaml"/>
+    <arg name="left_robot_F_T_NE" default="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.137 1" doc="End effector pose wrt robot flange. The matrix is transposed"/>
     <arg name="left_robot_gripper_mass" default="0.760"/>
     <!-- <arg name="left_robot_launch_gripper" default="no_gripper"/> -->
     <arg name="left_robot_urdf" default="$(find franka_description)/robots/panda_all_grippers/panda_all_grippers.urdf.xacro"/>
@@ -25,13 +27,12 @@
     <arg name="left_robot_controller" default="cart_hybrid_motion_force_controller"/>
     <!-- <arg name="left_robot_controller" default="matlogger"/> -->
     <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/desired_tool_pose"/>
-
     <!-- <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/> -->
     <!-- <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/equilibrium_pose"/> -->
     <arg name="left_robot_init_pose_yaw" default="0"/>
     <arg name="left_robot_init_pose_z" default="0"/> <!-- -0.006 in real robot -->
     <arg name="left_robot_init_pose_y" default="0.323"/>
-    <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/franka_left_cart_hybrid_motion_force_controller.yaml"/>
+    <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/controllers/franka_left_cart_hybrid_motion_force_controller.yaml"/>
     <arg name="left_robot_init_pose_x" default="-0.420"/>
     <arg name="left_robot_launch_interactive_marker" default="false"/>
 

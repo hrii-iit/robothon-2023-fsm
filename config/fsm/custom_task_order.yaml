@@ -1,0 +1,11 @@
+task_order:
+  - HOMING
+  # - BOARD_DETECTION
+  - PRESS_RED_BUTTON
+  # - MOVE_SLIDER
+  # - OPEN_DOOR
+  # - PROBE                   
+  # - STOW_PROBE_CABLE
+  # - PRESS_BLUE_BUTTON
+  # - HOMING
+  - EXIT
