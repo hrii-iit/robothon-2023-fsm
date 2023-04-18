@@ -2,7 +2,7 @@
 This repo contains the instructions to run the framework developed for the Robothon Grand Challenge 2023.
 
 # Installation instructions
-Install the *hrii_task_board_fsm* package and its dependencies within your *catkin_ws* source folder. To do so, first download the repos <a href="https://https://gitlab.iit.it/hrii/projects/robothon/hrii_task_board_fsm/-/raw/main/config/robothon_repos.yaml?inline=false" target="_blank">config file</a>.
+Install the *hrii_task_board_fsm* package and its dependencies within your *catkin_ws* source folder. To do so, first download the repos <a href="https://gitlab.iit.it/hrii/projects/robothon/hrii_task_board_fsm/-/raw/main/config/robothon_repos.yaml?inline=false" target="_blank">config file</a>.
 
 Then enter the following commands:
 ```bash
