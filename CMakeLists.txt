@@ -19,6 +19,7 @@ add_service_files(FILES
   MoveSlider.srv
   MovePlug.srv
   Homing.srv
+  BoardDetection.srv
   OpenDoor.srv
 )
 
@@ -43,7 +44,7 @@ include_directories(
   ${Eigen3_INCLUDE_DIRS}
 )
 
-catkin_install_python(PROGRAMS src/imaging_node.py
+catkin_install_python(PROGRAMS src/fake_perception_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

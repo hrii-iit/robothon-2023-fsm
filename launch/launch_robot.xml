@@ -92,7 +92,9 @@
     <!-- Hardware group -->
     <group unless="$(arg sim)">
     
-        <include file="$(find franka_control)/launch/franka_control.launch" pass_all_args="true"/>
+        <include file="$(find franka_control)/launch/franka_control.launch" pass_all_args="true">
+            <arg name="load_gripper" value="false"/>
+        </include>
 
         <rosparam command="load" file="$(find franka_example_controllers)/config/franka_example_controllers.yaml" subst_value="true" />
         <rosparam file="$(find franka_controllers)/config/franka_controllers.yaml" subst_value="true" />

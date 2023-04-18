@@ -58,6 +58,11 @@ inline bool applyContactForce(ros::NodeHandle& nh,
     // Robot controller task selection (motion-force task switch)
     // ROS subscriber and publisher definition
     ros::Publisher desired_wrench_pub = nh.advertise<geometry_msgs::WrenchStamped>("/"+robot_id+"/"+controller_name+"/desired_wrench", 1);
+    while (desired_wrench_pub.getNumSubscribers() > 0)
+    {
+        ROS_WARN_STREAM_THROTTLE(5, "Wait for subscribers in " << nh.resolveName("/"+robot_id+"/"+controller_name+"/desired_wrench") << " ROS topic...");
+        ros::spinOnce();
+    }
     
     Eigen::Matrix<double, 6, 1> ext_wrench;
     ros::Subscriber ext_wrench_sub = nh.subscribe<geometry_msgs::WrenchStamped>("/"+robot_id+"/franka_state_controller/F_ext", 1, 
@@ -65,7 +70,7 @@ inline bool applyContactForce(ros::NodeHandle& nh,
                 {
                     tf::wrenchMsgToEigen(msg->wrench, ext_wrench);
                     // Change sign to the ext wrench
-                    ext_wrench = -ext_wrench;
+                    // ext_wrench = -ext_wrench;
                 });
     
     // Define the controller task selection ROS client 
@@ -103,7 +108,7 @@ inline bool applyContactForce(ros::NodeHandle& nh,
 
     while (ros::ok())
     {
-
+        desired_wrench_pub.publish(desired_wrench_msg);
         ROS_INFO_STREAM_THROTTLE(1, "Ext force: " << ext_wrench[axis]);
         ROS_INFO_STREAM_THROTTLE(1, "Desired force: " << desired_wrench_eigen[axis]);
 

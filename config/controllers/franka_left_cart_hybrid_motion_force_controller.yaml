@@ -9,7 +9,7 @@ dictitems:
   force_D_gain: 0.0
   force_I_gain: 0.005
   force_PID_max_output: 1.0
-  force_P_gain: 0.007
+  force_P_gain: 0.002
   groups: !!python/object/new:dynamic_reconfigure.encoding.Config
     dictitems:
       axis_mode_pitch: false
@@ -21,7 +21,7 @@ dictitems:
       force_D_gain: 0.0
       force_I_gain: 0.005
       force_PID_max_output: 1.0
-      force_P_gain: 0.007
+      force_P_gain: 0.002
       groups: !!python/object/new:dynamic_reconfigure.encoding.Config
         state: []
       id: 0

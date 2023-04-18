@@ -2,6 +2,7 @@
 #include "ros/ros.h"
 #include "hrii_task_board_fsm/DesiredSliderDisplacement.h"
 #include "hrii_task_board_fsm/Homing.h"
+#include "hrii_task_board_fsm/BoardDetection.h"
 #include "hrii_task_board_fsm/MoveSlider.h"
 #include "hrii_task_board_fsm/PressButton.h"
 #include <tf2_ros/transform_listener.h>
@@ -14,6 +15,9 @@ class MainFSM
         {
             homing_service_name_ = "homing_fsm/activate";
             homing_client_ = nh_.serviceClient<hrii_task_board_fsm::Homing>(homing_service_name_);
+
+            board_detection_service_name_ = "board_detection";
+            board_detection_client_ = nh_.serviceClient<hrii_task_board_fsm::BoardDetection>(board_detection_service_name_);
 
             press_button_activation_service_name_ = "press_button_fsm/activate";
             press_button_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::PressButton>(press_button_activation_service_name_);
@@ -57,14 +61,6 @@ class MainFSM
                                           "cart_hybrid_motion_force_controller")) return false;
             ROS_INFO("Left robot controller running.");
             
-            // Wait for task services activation
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
-            homing_client_.waitForExistence();
-
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
-            press_button_activation_client_.waitForExistence();
-
-            ROS_INFO("All services are available.");
             return true;
         }
 
@@ -85,7 +81,6 @@ class MainFSM
                     ROS_INFO("- - - HOMING STATE - - -");
                     if (!homing())
                         state_ = MainFSM::States::ERROR;
-                        // or PRESS_RED_BUTTON
                     break;
                 }
                     
@@ -93,6 +88,8 @@ class MainFSM
                 {
                     // Board detection
                     ROS_INFO("- - - BOARD DETECTION STATE - - -");
+                    if (!boardDetection())
+                        state_ = MainFSM::States::ERROR;
                     break;
                 }
                     
@@ -101,7 +98,6 @@ class MainFSM
                     ROS_INFO("- - - PRESS RED BUTTON STATE - - -");
                     if (!pressRedButton())
                         state_ = MainFSM::States::ERROR;
-                        // or PRESS_RED_BUTTON
                     break;
                 }
 
@@ -110,7 +106,6 @@ class MainFSM
                     ROS_INFO("- - - MOVE SLIDER STATE - - -");
                     if (!moveSlider())
                         state_ = MainFSM::States::ERROR;
-                        // or MOVE_SLIDER
                     break;
                 }
 
@@ -182,6 +177,9 @@ class MainFSM
         std::string homing_service_name_;
         ros::ServiceClient homing_client_;
 
+        std::string board_detection_service_name_;
+        ros::ServiceClient board_detection_client_;
+
         std::string press_button_activation_service_name_;
         ros::ServiceClient press_button_activation_client_;
 
@@ -200,6 +198,11 @@ class MainFSM
         // Robots attributs
         std::string left_robot_id_, right_robot_id_;
 
+
+        
+        Eigen::Affine3d base_link_T_slider_;
+
+
         // FSM states declaration
         enum class States {HOMING, 
                             PRESS_RED_BUTTON, 
@@ -215,6 +218,10 @@ class MainFSM
         bool homing()
         {
             ROS_INFO("Go to home position...");
+
+            // Wait for task services activation
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
+            homing_client_.waitForExistence();
 
             hrii_task_board_fsm::Homing homing_srv;
             homing_srv.request.robot_id = left_robot_id_;
@@ -244,24 +251,38 @@ class MainFSM
             return true;
         }
 
+        bool boardDetection()
+        {
+            ROS_INFO("Detecting board...");
+
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_service_name_) << " ROS service...");
+            board_detection_client_.waitForExistence();
+
+            hrii_task_board_fsm::BoardDetection board_detection_srv;
+
+            if (!board_detection_client_.call(board_detection_srv))
+            {
+                ROS_ERROR("Error calling board detection service.");
+                return false;
+            }
+            else if (!board_detection_srv.response.success)
+            {
+                ROS_ERROR("Failure detecting board. Exiting.");
+                return false;
+            }
+            ROS_INFO("Board detected.");
+            return true;
+        }
+
         bool pressBlueButton()
         {
             ROS_INFO("Pressing the blue button...");
 
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
+            press_button_activation_client_.waitForExistence();
+
             hrii_task_board_fsm::PressButton press_button_srv;
             press_button_srv.request.robot_id = left_robot_id_;
-
-            // Fake button pose
-            // geometry_msgs::Pose fake_button_pose;
-            // fake_button_pose.position.x = 0.3;
-            // fake_button_pose.position.y = 0.0;
-            // fake_button_pose.position.z = 0.3;
-            // fake_button_pose.orientation.x = 1.0;
-            // fake_button_pose.orientation.y = 0.0;
-            // fake_button_pose.orientation.z = 0.0;
-            // fake_button_pose.orientation.w = 0.0;
-            // press_button_srv.request.button_pose.pose = fake_button_pose;
-            // ROS_WARN_STREAM("Using fake button pose!");
 
             // Real button pose
             geometry_msgs::TransformStamped blueButtonTransform;
@@ -276,13 +297,11 @@ class MainFSM
                 return false;
             }
             geometry_msgs::Pose blue_button_pose;
+            blue_button_pose.orientation = blueButtonTransform.transform.rotation;
             blue_button_pose.position.x = blueButtonTransform.transform.translation.x;
             blue_button_pose.position.y = blueButtonTransform.transform.translation.y;
             blue_button_pose.position.z = blueButtonTransform.transform.translation.z;
-            blue_button_pose.orientation.x = 1.0;
-            blue_button_pose.orientation.y = 0.0;
-            blue_button_pose.orientation.z = 0.0;
-            blue_button_pose.orientation.w = 0.0;
+
 
             ROS_INFO_STREAM("Blue button pose: " << blue_button_pose.position.x << ", " << blue_button_pose.position.y << ", " << blue_button_pose.position.z);
             ROS_INFO_STREAM("Blue button orientation: " << blue_button_pose.orientation.x << ", " << blue_button_pose.orientation.y << ", " << blue_button_pose.orientation.z << ", " << blue_button_pose.orientation.w);
@@ -307,20 +326,11 @@ class MainFSM
         {
             ROS_INFO("Pressing the red button...");
 
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
+            press_button_activation_client_.waitForExistence();
+
             hrii_task_board_fsm::PressButton press_button_srv;
             press_button_srv.request.robot_id = left_robot_id_;
-
-            // Fake button pose
-            // geometry_msgs::Pose fake_button_pose;
-            // fake_button_pose.position.x = 0.3;
-            // fake_button_pose.position.y = 0.0;
-            // fake_button_pose.position.z = 0.3;
-            // fake_button_pose.orientation.x = 1.0;
-            // fake_button_pose.orientation.y = 0.0;
-            // fake_button_pose.orientation.z = 0.0;
-            // fake_button_pose.orientation.w = 0.0;
-            // press_button_srv.request.button_pose.pose = fake_button_pose;
-            // ROS_WARN_STREAM("Using fake button pose!");
 
             // Real button pose
             geometry_msgs::TransformStamped redButtonTransform;
@@ -335,13 +345,10 @@ class MainFSM
                 return false;
             }
             geometry_msgs::Pose red_button_pose;
+            red_button_pose.orientation = redButtonTransform.transform.rotation;
             red_button_pose.position.x = redButtonTransform.transform.translation.x;
             red_button_pose.position.y = redButtonTransform.transform.translation.y;
             red_button_pose.position.z = redButtonTransform.transform.translation.z;
-            red_button_pose.orientation.x = 1.0;
-            red_button_pose.orientation.y = 0.0;
-            red_button_pose.orientation.z = 0.0;
-            red_button_pose.orientation.w = 0.0;
 
             ROS_INFO_STREAM("Red button pose: " << red_button_pose.position.x << ", " << red_button_pose.position.y << ", " << red_button_pose.position.z);
             ROS_INFO_STREAM("Red button orientation: " << red_button_pose.orientation.x << ", " << red_button_pose.orientation.y << ", " << red_button_pose.orientation.z << ", " << red_button_pose.orientation.w);
@@ -383,30 +390,43 @@ class MainFSM
                 return false;
             }
             geometry_msgs::Pose slider_pose;
-            //slider_pose.orientation = sliderTransform.transform.rotation;
+            slider_pose.orientation = sliderTransform.transform.rotation;
             slider_pose.position.x = sliderTransform.transform.translation.x;
             slider_pose.position.y = sliderTransform.transform.translation.y;
             slider_pose.position.z = sliderTransform.transform.translation.z;
-            slider_pose.orientation.x = 1.0;
-            slider_pose.orientation.y = 0.0;
-            slider_pose.orientation.z = 0.0;
-            slider_pose.orientation.w = 0.0;
             move_slider_srv.request.slider_pose.pose = slider_pose;
 
             // We call the service to get the first slider displacement from imaging side
-            slider_displacement_client_.call(slider_displacement_srv);
+            if (!slider_displacement_client_.call(slider_displacement_srv))
+            {
+                ROS_ERROR("Error calling imaging service.");
+                return false;
+            }
             double displacement_1 = slider_displacement_srv.response.displacement;
+            ROS_INFO_STREAM("First displacement along slider y-axis: " << displacement_1);
+
+            Eigen::Vector3d displacement_vector(0, displacement_1, 0);
+            ROS_INFO_STREAM("First displacement along slider y-axis in Vector3:" << displacement_vector);
+
+            //From transformStamped to rotation matrix
+            Eigen::Quaternion<double> Q(sliderTransform.transform.rotation.w, sliderTransform.transform.rotation.x, sliderTransform.transform.rotation.y, sliderTransform.transform.rotation.z);
+            Eigen::Matrix3d displacement_transformation_rot_matrix = Q.toRotationMatrix();
+            ROS_INFO_STREAM("Rotation matrix between franka_left_link0 and board slider: " << displacement_transformation_rot_matrix);
             
-            ROS_INFO_STREAM("First displacement: " << displacement_1);
+            //Displacement vector in robot_base RF
+            displacement_vector =  displacement_transformation_rot_matrix * displacement_vector;
+            ROS_INFO_STREAM("First displacement respect robot frame: " << displacement_vector);
 
             // Pose of the first reference point where we have to move the slider
             geometry_msgs::Pose reference_pose_1;
             reference_pose_1.position = slider_pose.position; //we assign to the first reference point the same initial pose of the slider
-            reference_pose_1.position.y += displacement_1;          //then we add the dispplacement along y-axis
-            reference_pose_1.orientation = slider_pose.orientation;     //keeping the same orientation of the initial slider pose
+            reference_pose_1.position.x += displacement_vector(0);      //then we add the computed displacement along each axes wrt robot RF
+            reference_pose_1.position.y += displacement_vector(1);
+            reference_pose_1.position.z += displacement_vector(2);          
+            reference_pose_1.orientation = slider_pose.orientation;     //we assing the same rotation of the slider
 
             move_slider_srv.request.reference_pose.pose = reference_pose_1; 
-            move_slider_srv.request.times = 1;
+            move_slider_srv.request.times = 1; //the times request indicate if it is the first or second movement of the slider 
 
             if (!move_slider_activation_client_.call(move_slider_srv))
             {
@@ -418,21 +438,37 @@ class MainFSM
                 ROS_ERROR("Failure moving slider. Exiting.");
                 return false;
             }
-            ROS_INFO("Slide Moved for the first time.");
+            ROS_INFO("SLIDE MOVED THE FIRST TIME.");
+
+            //------------------  SECOND REFERENCE POINT OF THE SLIDER ------------------  
 
             // We call the service to get the second slider displacement from imaging side
-            slider_displacement_client_.call(slider_displacement_srv);
+            if (!slider_displacement_client_.call(slider_displacement_srv))
+            {
+                ROS_ERROR("Error calling imaging service.");
+                return false;
+            }
             double displacement_2 = slider_displacement_srv.response.displacement;
+            ROS_INFO_STREAM("Second displacement along slider y-axis: " << displacement_2);
 
-            ROS_INFO_STREAM("Second displacement: " << displacement_2);
+            displacement_vector << 0, displacement_2, 0;
+            ROS_INFO_STREAM("Second displacement along slider y-axis in Vector3:" << displacement_vector);
+            
+            //Displacement vector in robot_base RF
+            displacement_vector =  displacement_transformation_rot_matrix * displacement_vector;
+            ROS_INFO_STREAM("Second displacement respect robot frame: " << displacement_vector);
 
+            // Pose of the first reference point where we have to move the slider
             geometry_msgs::Pose reference_pose_2;
             reference_pose_2.position = slider_pose.position; //we assign to the first reference point the same initial pose of the slider
-            reference_pose_2.position.y += displacement_2;          //then we add the dispplacement along y-axis
-            reference_pose_2.orientation = slider_pose.orientation;     //keeping the same orientation of the initial slider pose
+            reference_pose_2.position.x += displacement_vector(0);      //then we add the computed displacement along each axes wrt robot RF
+            reference_pose_2.position.y += displacement_vector(1);
+            reference_pose_2.position.z += displacement_vector(2);          
+            reference_pose_2.orientation = slider_pose.orientation;     //we assing the same rotation of the slider
+
 
             move_slider_srv.request.reference_pose.pose = reference_pose_2;
-            move_slider_srv.request.times = 2; 
+            move_slider_srv.request.times = 2; //the times request indicate if it is the first or second movement of the slider 
 
             if (!move_slider_activation_client_.call(move_slider_srv))
             {
@@ -444,7 +480,7 @@ class MainFSM
                 ROS_ERROR("Failure moving slider. Exiting.");
                 return false;
             }
-            ROS_INFO("Slide Moved for the second time.");
+            ROS_INFO("SLIDE MOVED THE SECOND TIME.");
 
             return true;
         }
