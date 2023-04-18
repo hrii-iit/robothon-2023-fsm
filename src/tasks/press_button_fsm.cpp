@@ -108,7 +108,7 @@ class PressButtonFSM
             }
 
             // Gripper opening
-            if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            // if (!gripper_->open(default_closing_gripper_speed_)) return false;
 
             res.success = true;
             res.message = "";
