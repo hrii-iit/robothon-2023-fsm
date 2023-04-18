@@ -9,6 +9,9 @@
     <arg name="launch_rviz" default="true"/>
     <arg name="rviz_config_file" default="$(find hrii_task_board_fsm)/rviz/main_fsm.rviz"/>
     
+    <!-- FSM arguments -->
+    <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/default_task_order.yaml"/>
+
     <!-- Left robot arguments -->
     <arg name="left_robot_id" default="franka_left"/>
     <arg name="left_robot_ip" default="192.168.0.102"/>
@@ -119,7 +122,9 @@
         <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
             <param name="right_robot_id" value="$(arg right_robot_id)"/>
+            <rosparam file="$(arg task_order_config_file)"/>
         </node>
+
         <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="move_slider_fsm" name="move_slider_fsm" output="screen" respawn="false"/>

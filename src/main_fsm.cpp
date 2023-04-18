@@ -1,3 +1,4 @@
+#include "hrii_task_board_fsm/utils/ControllerUtils.h"
 #include "ros/ros.h"
 #include "hrii_task_board_fsm/DesiredSliderDisplacement.h"
 #include "hrii_task_board_fsm/Homing.h"
@@ -5,7 +6,6 @@
 #include "hrii_task_board_fsm/PressButton.h"
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <controller_manager_msgs/ListControllers.h>
 
 class MainFSM
 {
@@ -39,35 +39,22 @@ class MainFSM
                 ROS_ERROR_STREAM("No " << nh_priv_.resolveName("right_robot_id") << " ROS param found");
                 return false;
             }
+            if(!nh_priv_.getParam("task_order", task_order_))
+            {
+                ROS_ERROR_STREAM("No " << nh_priv_.resolveName("task_order") << " ROS param found");
+                return false;
+            }
+            for (int cnt = 0; cnt < task_order_.size(); cnt++)
+            {
+                ROS_INFO_STREAM(cnt << ": " << task_order_[cnt]);
+            }
 
-            // Initialize controller status service
             left_robot_controller_manager_status_service_name_ = "/" + left_robot_id_ + "/controller_manager/list_controllers";
-            left_robot_controller_manager_status_client_ =  nh_.serviceClient<controller_manager_msgs::ListControllers>(left_robot_controller_manager_status_service_name_);
-
-            // Wait for controllers status service
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(left_robot_controller_manager_status_service_name_) << " ROS service...");
-            left_robot_controller_manager_status_client_.waitForExistence();
-
-            // Check if controller status is running
-            controller_manager_msgs::ListControllers left_robot_controller_list_srv;
-            bool controller_started_flag = false;
-            do{
-
-                if (!left_robot_controller_manager_status_client_.call(left_robot_controller_list_srv))
-                {
-                    ROS_ERROR("Error calling left robot controller manager status service.");
-                    return false;
-                }
-                else
-                {
-                    for (const auto& controller : left_robot_controller_list_srv.response.controller){
-                        if(controller.name == "cart_hybrid_motion_force_controller" && controller.state == "running")
-                            controller_started_flag = true;
-                    }
-                }
-
-            }while(!controller_started_flag);
-
+            if (!waitForRunningController(nh_, 
+                                          left_robot_controller_manager_status_service_name_,
+                                          "cart_hybrid_motion_force_controller")) return false;
+            ROS_INFO("Left robot controller running.");
+            
             // Wait for task services activation
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
             homing_client_.waitForExistence();
@@ -81,97 +68,109 @@ class MainFSM
 
         void spin()
         {
-            while (ros::ok() && state_ != MainFSM::states::EXIT && state_ != MainFSM::states::ERROR)
+            task_cnt_ = 0;
+            state_ = resolveStateString(task_order_[task_cnt_]);
+            while (ros::ok() &&
+                   task_cnt_ < task_order_.size() &&
+                   state_ != MainFSM::States::EXIT &&
+                   state_ != MainFSM::States::ERROR)
             {
                 switch (state_)
                 {
-                case MainFSM::states::HOMING:
+                case MainFSM::States::HOMING:
                 {
                     // Move to homing pose and wait for start
                     ROS_INFO("- - - HOMING STATE - - -");
-                    if (homing())
-                        state_ = MainFSM::states::BOARD_DETECTION;
-                    else
-                        state_ = MainFSM::states::ERROR;
+                    if (!homing())
+                        state_ = MainFSM::States::ERROR;
                         // or PRESS_RED_BUTTON
                     break;
                 }
                     
-                case MainFSM::states::BOARD_DETECTION:
+                case MainFSM::States::BOARD_DETECTION:
                 {
                     // Board detection
                     ROS_INFO("- - - BOARD DETECTION STATE - - -");
-                    state_ = MainFSM::states::PRESS_BLUE_BUTTON;
                     break;
                 }
                     
-                case MainFSM::states::PRESS_BLUE_BUTTON:
+                case MainFSM::States::PRESS_RED_BUTTON:
                 {
-                    ROS_INFO("- - - PRESS BLUE BUTTON STATE - - -");
-                    if (pressBlueButton())
-                        state_ = MainFSM::states::MOVE_SLIDER;
-                    else
-                        state_ = MainFSM::states::ERROR;
+                    ROS_INFO("- - - PRESS RED BUTTON STATE - - -");
+                    if (!pressRedButton())
+                        state_ = MainFSM::States::ERROR;
                         // or PRESS_RED_BUTTON
                     break;
                 }
 
-                case MainFSM::states::MOVE_SLIDER:
+                case MainFSM::States::MOVE_SLIDER:
                 {
                     ROS_INFO("- - - MOVE SLIDER STATE - - -");
-                    if (moveSlider())
-                        state_ = MainFSM::states::OPEN_DOOR;
-                    else
-                        state_ = MainFSM::states::ERROR;
+                    if (!moveSlider())
+                        state_ = MainFSM::States::ERROR;
                         // or MOVE_SLIDER
                     break;
                 }
 
-                case MainFSM::states::OPEN_DOOR:
+                case MainFSM::States::OPEN_DOOR:
                 {
                     /* code */
                     break;
                 }
                     
-                case MainFSM::states::PROBE:
+                case MainFSM::States::PROBE:
                 {
                     /* code */
                     break;
                 }
-                    
                 
-                case MainFSM::states::STOW_PROBE_CABLE:
+                case MainFSM::States::STOW_PROBE_CABLE:
                 {
                     /* code */
                     break;
                 }
 
-                case MainFSM::states::PRESS_RED_BUTTON:
+                case MainFSM::States::PRESS_BLUE_BUTTON:
                 {
                     /* code */
                     break;
                 }
 
-                case MainFSM::states::EXIT:
-                {
-                    ROS_INFO("Tasks completed. Congratulation!");
-                    break;
-                }
+                // case MainFSM::States::EXIT:
+                // {
+                //     ROS_INFO("Tasks completed. Congratulation!");
+                //     break;
+                // }
 
                 default:
                 {
-                    state_ = MainFSM::states::ERROR;
+                    state_ = MainFSM::States::ERROR;
                     ROS_INFO("State not implemented. Error.");
                     break;
                 }
                 }
+                if (state_ != MainFSM::States::EXIT && state_ != MainFSM::States::ERROR)
+                {
+                    task_cnt_++;
+                    state_ = resolveStateString(task_order_[task_cnt_]);
+                }
             }
-            
+            if (state_ == MainFSM::States::EXIT)
+            {
+                ROS_INFO("Tasks completed. Congratulation!");
+            }
+            else if (state_ == MainFSM::States::ERROR)
+            {
+                ROS_ERROR("Main FSM finished with error.");
+            }
         }
     
     private:
         // ROS attributes
         ros::NodeHandle nh_, nh_priv_;
+
+        std::vector<std::string> task_order_;
+        int task_cnt_;
         
         std::string left_robot_controller_manager_status_service_name_;
         ros::ServiceClient left_robot_controller_manager_status_client_;
@@ -195,7 +194,7 @@ class MainFSM
         std::string left_robot_id_, right_robot_id_;
 
         // FSM states declaration
-        enum class states {HOMING, 
+        enum class States {HOMING, 
                             PRESS_RED_BUTTON, 
                             BOARD_DETECTION,
                             MOVE_SLIDER, 
@@ -443,6 +442,22 @@ class MainFSM
 
 
             return true;
+        }
+
+
+        States resolveStateString(const std::string& state_str)
+        {
+            if (state_str.compare("homing") == 0 || state_str.compare("HOMING") == 0) return States::HOMING;
+            if (state_str.compare("board_detection") == 0 || state_str.compare("BOARD_DETECTION") == 0) return States::BOARD_DETECTION;
+            if (state_str.compare("press_red_button") == 0 || state_str.compare("PRESS_RED_BUTTON") == 0) return States::PRESS_RED_BUTTON;
+            if (state_str.compare("move_slider") == 0 || state_str.compare("MOVE_SLIDER") == 0) return States::MOVE_SLIDER;
+            if (state_str.compare("open_door") == 0 || state_str.compare("OPEN_DOOR") == 0) return States::OPEN_DOOR;
+            if (state_str.compare("probe") == 0 || state_str.compare("PROBE") == 0) return States::PROBE;
+            if (state_str.compare("stow_probe_cable") == 0 || state_str.compare("STOW_PROBE_CABLE") == 0) return States::STOW_PROBE_CABLE;
+            if (state_str.compare("press_blue_button") == 0 || state_str.compare("PRESS_BLUE_BUTTON") == 0) return States::PRESS_BLUE_BUTTON;
+            if (state_str.compare("exit") == 0 || state_str.compare("EXIT") == 0) return States::EXIT;
+            ROS_ERROR("State string not recognired. Return ERROR state.");
+            return States::ERROR;
         }
 
 

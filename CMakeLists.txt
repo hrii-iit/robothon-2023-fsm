@@ -30,7 +30,7 @@ generate_messages(
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-#  INCLUDE_DIRS include
+ INCLUDE_DIRS include
  CATKIN_DEPENDS
    hrii_trajectory_planner
    hrii_gri_interface
