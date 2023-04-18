@@ -59,17 +59,6 @@ class MainFSM
                                           "cart_hybrid_motion_force_controller")) return false;
             ROS_INFO("Left robot controller running.");
             
-            // Wait for task services activation
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
-            homing_client_.waitForExistence();
-
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
-            press_button_activation_client_.waitForExistence();
-
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_service_name_) << " ROS service...");
-            board_detection_client_.waitForExistence();
-
-            ROS_INFO("All services are available.");
             return true;
         }
 
@@ -218,6 +207,10 @@ class MainFSM
         {
             ROS_INFO("Go to home position...");
 
+            // Wait for task services activation
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
+            homing_client_.waitForExistence();
+
             hrii_task_board_fsm::Homing homing_srv;
             homing_srv.request.robot_id = left_robot_id_;
 
@@ -250,6 +243,9 @@ class MainFSM
         {
             ROS_INFO("Detecting board...");
 
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_service_name_) << " ROS service...");
+            board_detection_client_.waitForExistence();
+
             hrii_task_board_fsm::BoardDetection board_detection_srv;
 
             if (!board_detection_client_.call(board_detection_srv))
@@ -269,6 +265,9 @@ class MainFSM
         bool pressBlueButton()
         {
             ROS_INFO("Pressing the blue button...");
+
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
+            press_button_activation_client_.waitForExistence();
 
             hrii_task_board_fsm::PressButton press_button_srv;
             press_button_srv.request.robot_id = left_robot_id_;
@@ -328,6 +327,9 @@ class MainFSM
         bool pressRedButton()
         {
             ROS_INFO("Pressing the red button...");
+
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
+            press_button_activation_client_.waitForExistence();
 
             hrii_task_board_fsm::PressButton press_button_srv;
             press_button_srv.request.robot_id = left_robot_id_;
