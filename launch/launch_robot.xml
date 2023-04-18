@@ -99,6 +99,9 @@
 
         <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="$(arg controller)"/>
         
+        <!-- Static tf to connect world and robots -->
+        <node pkg="tf2_ros" type="static_transform_publisher" name="world_franka_left_br" args="-0.420 0.323 -0.006 0 0 0 1 world franka_left_link0"/>
+
     </group>
 
     <node pkg="dynamic_reconfigure" type="dynparam" name="dynamic_reconfigure_load" args="load $(arg controller)/dyn_rec_ctrl_param $(arg controller_config_file)"/>
@@ -111,11 +114,14 @@
     </node>
 
     <!-- Load gripper interface -->
-    <!-- <include file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
+    <include file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
         <arg name="launch_rviz" value="false"/>
         <arg name="launch_gazebo_world" value="false"/>
         <arg name="arm_prefix" value="$(arg arm_id)"/>
-    </include> -->
+        <arg name="interface_type" value="SIMULATION" if="$(arg sim)"/>
+        <arg name="interface_type" value="HARDWARE" unless="$(arg sim)"/>
+        <arg name="gripper_ip" value="$(arg robot_ip)"/>
+    </include>
 
     <!-- Trajectory planner -->
     <include file="$(find hrii_trajectory_planner)/launch/trajectory_handler.launch">

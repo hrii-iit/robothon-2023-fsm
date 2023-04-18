@@ -14,8 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 add_service_files(FILES
+  DesiredSliderDisplacement.srv
   PressButton.srv
   MoveSlider.srv
+  MovePlug.srv
   Homing.srv
 )
 
@@ -40,6 +42,11 @@ include_directories(
   ${Eigen3_INCLUDE_DIRS}
 )
 
+catkin_install_python(PROGRAMS src/imaging_node.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
 add_executable(${PROJECT_NAME}_main_fsm src/main_fsm.cpp)
 set_target_properties(${PROJECT_NAME}_main_fsm PROPERTIES OUTPUT_NAME "main_fsm")
 add_dependencies(${PROJECT_NAME}_main_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
@@ -59,3 +66,8 @@ add_executable(${PROJECT_NAME}_move_slider_fsm src/tasks/move_slider_fsm.cpp)
 set_target_properties(${PROJECT_NAME}_move_slider_fsm PROPERTIES OUTPUT_NAME "move_slider_fsm")
 add_dependencies(${PROJECT_NAME}_move_slider_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_move_slider_fsm ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_move_plug_fsm src/tasks/move_plug_fsm.cpp)
+set_target_properties(${PROJECT_NAME}_move_plug_fsm PROPERTIES OUTPUT_NAME "move_plug_fsm")
+add_dependencies(${PROJECT_NAME}_move_plug_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_move_plug_fsm ${catkin_LIBRARIES})
