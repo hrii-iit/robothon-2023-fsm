@@ -1,6 +1,20 @@
 # Robothon 2023
 This repo contains the instructions to run the framework developed for the Robothon Grand Challenge 2023.
 
+# Prerequisites
+Check that the correct version of libfranka is installed:
+```bash
+cd ~/git/hrii_gitlab/robotics/franka/libfranka
+```
+If the selected branch is not "0.9.2" delete the build folder and execute this commands:
+```bash
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF ..
+cmake --build .
+```
+
+_Note that to make the other hrii sw work you may need to recompile libfranka in the noetic-devel branch_
 # Installation instructions
 Install the *hrii_task_board_fsm* package and its dependencies within your *catkin_ws* source folder. To do so, first download the repos <a href="https://gitlab.iit.it/hrii/projects/robothon/hrii_task_board_fsm/-/raw/main/config/robothon_repos.yaml?inline=false" target="_blank">config file</a>.
 
