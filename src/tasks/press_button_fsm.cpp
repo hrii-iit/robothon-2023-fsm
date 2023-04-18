@@ -42,8 +42,6 @@ class PressButtonFSM
             traj_helper_->setTrackingPositionTolerance(0.2);
             ROS_INFO("Trajectory handler client initialized.");
 
-            
-
             // Initialize ROS publishers and subscribers
             
             // Initialize gripper and close it
@@ -72,7 +70,7 @@ class PressButtonFSM
             }
 
             // Move to the button pose w.r.t the world frame
-            waypoints.push_back(req.button_pose.pose);
+            // waypoints.push_back(req.button_pose.pose);
 
             // Switch to task force in Z-axis
             geometry_msgs::WrenchStamped desired_wrench;

@@ -127,10 +127,11 @@
     <include file="$(find hrii_trajectory_planner)/launch/trajectory_handler.launch">
         <arg name="trajectory_planner_type" value="QUINTIC_POL"/>
         <arg name="inertial_frame_name" value="$(arg arm_id)_link0"/>
-        <arg name="moving_frame_name" value="$(arg arm_id)_EE"/>
+        <!-- <arg name="moving_frame_name" value="$(arg arm_id)_EE"/> -->
+        <arg name="moving_frame_name" value="$(arg arm_id)_task_frame"/>
         <arg name="desired_pose_topic" value="$(arg controller_desired_pose_topic)"/>
         <!-- <arg name="desired_pose_topic" value="cartesian_impedance_example_controller/equilibrium_pose"/> -->
-        <arg name="debug_mode" value="false"/>
+        <arg name="debug_mode" value="true"/>
     </include>
 
 </launch>
