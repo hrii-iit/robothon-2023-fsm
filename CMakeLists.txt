@@ -19,6 +19,7 @@ add_service_files(FILES
   MoveSlider.srv
   MovePlug.srv
   Homing.srv
+  BoardDetection.srv
 )
 
 generate_messages(

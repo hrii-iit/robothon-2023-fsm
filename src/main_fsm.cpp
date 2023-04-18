@@ -2,6 +2,7 @@
 #include "ros/ros.h"
 #include "hrii_task_board_fsm/DesiredSliderDisplacement.h"
 #include "hrii_task_board_fsm/Homing.h"
+#include "hrii_task_board_fsm/BoardDetection.h"
 #include "hrii_task_board_fsm/MoveSlider.h"
 #include "hrii_task_board_fsm/PressButton.h"
 #include <tf2_ros/transform_listener.h>
@@ -14,6 +15,9 @@ class MainFSM
         {
             homing_service_name_ = "homing_fsm/activate";
             homing_client_ = nh_.serviceClient<hrii_task_board_fsm::Homing>(homing_service_name_);
+
+            board_detection_service_name_ = "board_detection";
+            board_detection_client_ = nh_.serviceClient<hrii_task_board_fsm::BoardDetection>(board_detection_service_name_);
 
             press_button_activation_service_name_ = "press_button_fsm/activate";
             press_button_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::PressButton>(press_button_activation_service_name_);
@@ -62,6 +66,9 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
             press_button_activation_client_.waitForExistence();
 
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_service_name_) << " ROS service...");
+            board_detection_client_.waitForExistence();
+
             ROS_INFO("All services are available.");
             return true;
         }
@@ -83,7 +90,6 @@ class MainFSM
                     ROS_INFO("- - - HOMING STATE - - -");
                     if (!homing())
                         state_ = MainFSM::States::ERROR;
-                        // or PRESS_RED_BUTTON
                     break;
                 }
                     
@@ -91,6 +97,8 @@ class MainFSM
                 {
                     // Board detection
                     ROS_INFO("- - - BOARD DETECTION STATE - - -");
+                    if (!boardDetection())
+                        state_ = MainFSM::States::ERROR;
                     break;
                 }
                     
@@ -99,7 +107,6 @@ class MainFSM
                     ROS_INFO("- - - PRESS RED BUTTON STATE - - -");
                     if (!pressRedButton())
                         state_ = MainFSM::States::ERROR;
-                        // or PRESS_RED_BUTTON
                     break;
                 }
 
@@ -108,7 +115,6 @@ class MainFSM
                     ROS_INFO("- - - MOVE SLIDER STATE - - -");
                     if (!moveSlider())
                         state_ = MainFSM::States::ERROR;
-                        // or MOVE_SLIDER
                     break;
                 }
 
@@ -178,6 +184,9 @@ class MainFSM
         std::string homing_service_name_;
         ros::ServiceClient homing_client_;
 
+        std::string board_detection_service_name_;
+        ros::ServiceClient board_detection_client_;
+
         std::string press_button_activation_service_name_;
         ros::ServiceClient press_button_activation_client_;
 
@@ -234,6 +243,26 @@ class MainFSM
                 return false;
             }
             ROS_INFO("Homing succeded.");
+            return true;
+        }
+
+        bool boardDetection()
+        {
+            ROS_INFO("Detecting board...");
+
+            hrii_task_board_fsm::BoardDetection board_detection_srv;
+
+            if (!board_detection_client_.call(board_detection_srv))
+            {
+                ROS_ERROR("Error calling board detection service.");
+                return false;
+            }
+            else if (!board_detection_srv.response.success)
+            {
+                ROS_ERROR("Failure detecting board. Exiting.");
+                return false;
+            }
+            ROS_INFO("Board detected.");
             return true;
         }
 

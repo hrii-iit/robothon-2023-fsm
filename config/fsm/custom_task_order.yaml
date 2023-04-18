@@ -1,6 +1,6 @@
 task_order:
   - HOMING
-  # - BOARD_DETECTION
+  - BOARD_DETECTION
   - PRESS_RED_BUTTON
   # - MOVE_SLIDER
   # - OPEN_DOOR
