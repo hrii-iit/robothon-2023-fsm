@@ -9,10 +9,10 @@ def slider_desired_displacement(req):
     #Computation of the desired pose from perception section (ToDo)
     global count
     if (count == 1):
-        desired_displacement = 0.04
+        desired_displacement = -0.04
         
     if (count == 2):
-        desired_displacement = 0.02
+        desired_displacement = -0.02
 
     print("Returning [%s]"%(desired_displacement))
     count = count + 1
