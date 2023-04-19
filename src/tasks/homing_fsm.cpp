@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "hrii_task_board_fsm/Homing.h"
+#include "hrii_robothon_msgs/Homing.h"
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
 
@@ -23,8 +23,8 @@ class HomingFSM
         ros::ServiceServer activation_server_;
         
 
-        bool activationCallback(hrii_task_board_fsm::Homing::Request& req,
-                                hrii_task_board_fsm::Homing::Response& res)
+        bool activationCallback(hrii_robothon_msgs::Homing::Request& req,
+                                hrii_robothon_msgs::Homing::Response& res)
         {
             ROS_INFO_STREAM("Activate homing for robot: " << req.robot_id);
 
@@ -76,7 +76,7 @@ class HomingFSM
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "dummy_fsm");
+    ros::init(argc, argv, "homing_fsm");
     ros::NodeHandle nh("~");
 
     HomingFSM fsm(nh);

@@ -1,9 +1,0 @@
-string robot_id
-geometry_msgs/PoseStamped door_handle_pose
-geometry_msgs/PoseStamped center_of_rotation_pose
-float64 execution_time
-float64 final_desired_angle
-float64 sampling_time
----
-bool success
-string message

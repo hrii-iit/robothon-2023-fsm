@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "hrii_task_board_fsm/MoveSlider.h"
+#include "hrii_robothon_msgs/MoveSlider.h"
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
 
@@ -23,8 +23,8 @@ class MoveSliderFSM
         ros::ServiceServer activation_server_;
         
 
-        bool activationCallback(hrii_task_board_fsm::MoveSlider::Request& req,
-                                hrii_task_board_fsm::MoveSlider::Response& res)
+        bool activationCallback(hrii_robothon_msgs::MoveSlider::Request& req,
+                                hrii_robothon_msgs::MoveSlider::Response& res)
         {
             ROS_INFO_STREAM("Activate move slider interface for robot: " << req.robot_id);
 

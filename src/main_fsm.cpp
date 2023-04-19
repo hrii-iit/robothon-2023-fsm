@@ -1,14 +1,13 @@
 
 #include "ros/ros.h"
+#include "hrii_robothon_msgs/DesiredSliderDisplacement.h"
+#include "hrii_robothon_msgs/Homing.h"
+#include "hrii_robothon_msgs/BoardDetection.h"
+#include "hrii_robothon_msgs/MoveSlider.h"
+#include "hrii_robothon_msgs/PressButton.h"
+#include "hrii_robothon_msgs/OpenDoor.h"
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
-
-#include "hrii_task_board_fsm/DesiredSliderDisplacement.h"
-#include "hrii_task_board_fsm/Homing.h"
-#include "hrii_task_board_fsm/BoardDetection.h"
-#include "hrii_task_board_fsm/MoveSlider.h"
-#include "hrii_task_board_fsm/PressButton.h"
-#include "hrii_task_board_fsm/OpenDoor.h"
 
 #include "hrii_task_board_fsm/utils/ControllerUtils.h"
 #include "hrii_task_board_fsm/utils/GeometryMsgs.h"
@@ -19,22 +18,22 @@ class MainFSM
         MainFSM() : nh_priv_("~")
         {
             homing_service_name_ = "homing_fsm/activate";
-            homing_client_ = nh_.serviceClient<hrii_task_board_fsm::Homing>(homing_service_name_);
+            homing_client_ = nh_.serviceClient<hrii_robothon_msgs::Homing>(homing_service_name_);
 
             board_detection_service_name_ = "board_detection";
-            board_detection_client_ = nh_.serviceClient<hrii_task_board_fsm::BoardDetection>(board_detection_service_name_);
+            board_detection_client_ = nh_.serviceClient<hrii_robothon_msgs::BoardDetection>(board_detection_service_name_);
 
             press_button_activation_service_name_ = "press_button_fsm/activate";
-            press_button_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::PressButton>(press_button_activation_service_name_);
+            press_button_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::PressButton>(press_button_activation_service_name_);
 
             move_slider_activation_service_name_ = "move_slider_fsm/activate";
-            move_slider_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::MoveSlider>(move_slider_activation_service_name_);
+            move_slider_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::MoveSlider>(move_slider_activation_service_name_);
 
             slider_displacement_service_name_ = "/slider_desired_pose";
-            slider_displacement_client_ = nh_.serviceClient<hrii_task_board_fsm::DesiredSliderDisplacement>(slider_displacement_service_name_);
+            slider_displacement_client_ = nh_.serviceClient<hrii_robothon_msgs::DesiredSliderDisplacement>(slider_displacement_service_name_);
 
-            open_door_activation_service_name_ = "open_door_fsm/activate";
-            open_door_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::OpenDoor>(open_door_activation_service_name_);
+            open_door_service_name_ = "open_door_/activate";
+            open_door_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::OpenDoor>(open_door_service_name_);
 
             //state_ = MainFSM::states::HOMING;
         }
@@ -229,7 +228,7 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
             homing_client_.waitForExistence();
 
-            hrii_task_board_fsm::Homing homing_srv;
+            hrii_robothon_msgs::Homing homing_srv;
             homing_srv.request.robot_id = left_robot_id_;
 
             // Home pose
@@ -264,7 +263,7 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_service_name_) << " ROS service...");
             board_detection_client_.waitForExistence();
 
-            hrii_task_board_fsm::BoardDetection board_detection_srv;
+            hrii_robothon_msgs::BoardDetection board_detection_srv;
 
             if (!board_detection_client_.call(board_detection_srv))
             {
@@ -287,7 +286,7 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
             press_button_activation_client_.waitForExistence();
 
-            hrii_task_board_fsm::PressButton press_button_srv;
+            hrii_robothon_msgs::PressButton press_button_srv;
             press_button_srv.request.robot_id = left_robot_id_;
 
             // Real button pose
@@ -335,7 +334,7 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(press_button_activation_service_name_) << " ROS service...");
             press_button_activation_client_.waitForExistence();
 
-            hrii_task_board_fsm::PressButton press_button_srv;
+            hrii_robothon_msgs::PressButton press_button_srv;
             press_button_srv.request.robot_id = left_robot_id_;
 
             // Real button pose
@@ -379,8 +378,8 @@ class MainFSM
         {
             ROS_INFO("Moving the slider...");
 
-            hrii_task_board_fsm::DesiredSliderDisplacement slider_displacement_srv;
-            hrii_task_board_fsm::MoveSlider move_slider_srv;
+            hrii_robothon_msgs::DesiredSliderDisplacement slider_displacement_srv;
+            hrii_robothon_msgs::MoveSlider move_slider_srv;
             move_slider_srv.request.robot_id = left_robot_id_;
             
             // Real slider pose
@@ -498,7 +497,7 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(open_door_activation_service_name_) << " ROS service...");
             open_door_activation_client_.waitForExistence();
 
-            hrii_task_board_fsm::OpenDoor open_door_srv;
+            hrii_robothon_msgs::OpenDoor open_door_srv;
             open_door_srv.request.robot_id = left_robot_id_;
 
             // Get door handle pose

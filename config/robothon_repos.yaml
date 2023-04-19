@@ -1,14 +1,15 @@
 PROJECT
 git@gitlab.iit.it:hrii/projects/robothon/hrii_task_board_fsm.git: main
 DEPENDENCIES
-git@gitlab.iit.it:hrii/robotics/franka/franka_controllers.git: 0.10.1 (7d6854d)
+git@gitlab.iit.it:hrii/robotics/franka/franka_controllers.git: 0.10.1 (cb9c88a)
 git@gitlab.iit.it:hrii/robotics/franka/franka_ros.git: 0.10.1 (e616ed3)
+git@gitlab.iit.it:hrii/projects/robothon/hrii_board_description.git: main (531d571)
 git@gitlab.iit.it:hrii/robotics/grippers/hrii_franka_gripper.git: noetic-devel (af71d30)
-git@gitlab.iit.it:hrii/general/hrii_gazebo_utils.git: noetic-devel (2ece0a9)
+git@gitlab.iit.it:hrii/general/hrii_gazebo_utils.git: noetic-devel (9d04307)
 git@gitlab.iit.it:hrii/sensors/hrii_realsense_ros.git: noetic-devel (d17a232)
+git@gitlab.iit.it:hrii/projects/robothon/hrii_robothon_msgs.git: main (554269a)
 git@gitlab.iit.it:hrii/robotics/common/hrii_robot_interface.git: noetic-devel (711b2a6)
 git@gitlab.iit.it:hrii/robotics/grippers/hrii_robotiq_2f85.git: noetic-devel (cf14f83)
 git@gitlab.iit.it:hrii/robotics/common/hrii_robot_msgs.git: noetic-devel (3b9ced6)
-git@gitlab.iit.it:hrii/projects/robothon/hrii_board_description.git: main (3a9b9e3)
-git@gitlab.iit.it:hrii/planning/hrii_trajectory_planner.git: noetic-devel (7fc0c78)
-git@gitlab.iit.it:hrii/general/hrii_utils.git: noetic-devel (00216d6)
+git@gitlab.iit.it:hrii/planning/hrii_trajectory_planner.git: noetic-devel (9a03690)
+git@gitlab.iit.it:hrii/general/hrii_utils.git: noetic-devel (a07b7b9)

@@ -17,6 +17,7 @@
   <depend>eigen_conversions</depend>
   <depend>hrii_gri_interface</depend>
   <depend>hrii_trajectory_planner</depend>
+  <depend>hrii_robothon_msgs</depend>
 
 
 </package>
