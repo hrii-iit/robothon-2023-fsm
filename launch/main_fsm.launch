@@ -14,7 +14,7 @@
     <arg name="task_order_config_file" default="$(find hrii_task_board_fsm)/config/fsm/custom_task_order.yaml"/>
 
     <!-- Task board arguments -->
-    <arg name="task_board_publish_manual_tf" default="false"/>
+    <arg name="task_board_publish_manual_tf" default="$(arg sim)"/>
     <arg name="task_board_init_pose_x" default="0.0"/>
     <arg name="task_board_init_pose_y" default="0.0"/>
     <arg name="task_board_init_pose_z" default="0.0"/>

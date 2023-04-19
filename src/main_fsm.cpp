@@ -1,4 +1,4 @@
-#include "hrii_task_board_fsm/utils/ControllerUtils.h"
+
 #include "ros/ros.h"
 #include "hrii_robothon_msgs/DesiredSliderDisplacement.h"
 #include "hrii_robothon_msgs/Homing.h"
@@ -8,6 +8,9 @@
 #include "hrii_robothon_msgs/OpenDoor.h"
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
+
+#include "hrii_task_board_fsm/utils/ControllerUtils.h"
+#include "hrii_task_board_fsm/utils/GeometryMsgs.h"
 
 class MainFSM
 {
@@ -29,8 +32,8 @@ class MainFSM
             slider_displacement_service_name_ = "/slider_desired_pose";
             slider_displacement_client_ = nh_.serviceClient<hrii_robothon_msgs::DesiredSliderDisplacement>(slider_displacement_service_name_);
 
-            open_door_service_name_ = "open_door_/activate";
-            open_door_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::OpenDoor>(open_door_service_name_);
+            open_door_activation_service_name_ = "open_door_fsm/activate";
+            open_door_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::OpenDoor>(open_door_activation_service_name_);
 
             //state_ = MainFSM::states::HOMING;
         }
@@ -191,7 +194,7 @@ class MainFSM
         std::string slider_displacement_service_name_;
         ros::ServiceClient slider_displacement_client_;
 
-        std::string open_door_service_name_;
+        std::string open_door_activation_service_name_;
         ros::ServiceClient open_door_activation_client_;
         
         tf2_ros::Buffer tfBuffer;
@@ -505,22 +508,47 @@ class MainFSM
         {
             ROS_INFO("Open door...");
 
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(open_door_service_name_) << " ROS service...");
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(open_door_activation_service_name_) << " ROS service...");
             open_door_activation_client_.waitForExistence();
 
             hrii_robothon_msgs::OpenDoor open_door_srv;
             open_door_srv.request.robot_id = left_robot_id_;
 
-            // Door handle pose
-            geometry_msgs::Pose door_handle_pose;
-            door_handle_pose.position.x = 0.351;
-            door_handle_pose.position.y = -0.233;
-            door_handle_pose.position.z = 0.441;
-            door_handle_pose.orientation.x = -0.693;
-            door_handle_pose.orientation.y = 0.706;
-            door_handle_pose.orientation.z = -0.104;
-            door_handle_pose.orientation.w = -0.104;
-            open_door_srv.request.door_handle_pose.pose = door_handle_pose;
+            // Get door handle pose
+            geometry_msgs::TransformStamped door_handle_transform;
+            try
+            {
+                door_handle_transform = tfBuffer.lookupTransform(open_door_srv.request.robot_id+"_link0", "task_board_door_handle_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << open_door_srv.request.robot_id << "_link0 and task_board_door_handle_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw " << open_door_srv.request.robot_id <<"_link0 and task_board_door_handle_link NOT found!");
+                return false;
+            }
+
+            // Get door center of rotation pose
+            geometry_msgs::TransformStamped center_of_rotation_pose_transform;
+            try
+            {
+                center_of_rotation_pose_transform = tfBuffer.lookupTransform(open_door_srv.request.robot_id+"_link0", "task_board_door_center_of_rotation_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << open_door_srv.request.robot_id <<"_link0 and task_board_door_center_of_rotation_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw " << open_door_srv.request.robot_id <<"_link0 and task_board_door_center_of_rotation_link NOT found!");
+                return false;
+            }
+            
+            // Fill service call
+            open_door_srv.request.execution_time = 5.0;
+            open_door_srv.request.final_desired_angle = 1.5707;
+            // open_door_srv.request.final_desired_angle = 90;
+            open_door_srv.request.sampling_time = 0.001;
+            open_door_srv.request.door_handle_pose.pose = geometry_msgs::toPose(door_handle_transform.transform);
+            open_door_srv.request.center_of_rotation_pose.pose = geometry_msgs::toPose(center_of_rotation_pose_transform.transform);
 
             if (!open_door_activation_client_.call(open_door_srv))
             {
@@ -529,10 +557,10 @@ class MainFSM
             }
             else if (!open_door_srv.response.success)
             {
-                ROS_ERROR("Failure going to open door pose. Exiting.");
+                ROS_ERROR("Failure opening door. Exiting.");
                 return false;
             }
-            ROS_INFO("Open door succeded.");
+            ROS_INFO("Opening door succeded.");
             return true;
         }
 

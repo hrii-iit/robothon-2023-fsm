@@ -26,6 +26,8 @@ before_script:
   - git clone git@gitlab.iit.it:hrii/robotics/common/hrii_robot_msgs.git
   - git clone git@gitlab.iit.it:hrii/general/hrii_utils.git
 
+  - git clone git@gitlab.iit.it:hrii/projects/robothon/hrii_robothon_msgs.git
+
   - apt install ros-noetic-move-base-msgs -y
 
 build:
