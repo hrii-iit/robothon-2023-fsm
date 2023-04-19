@@ -32,7 +32,7 @@ class MainFSM
             slider_displacement_service_name_ = "/slider_desired_pose";
             slider_displacement_client_ = nh_.serviceClient<hrii_robothon_msgs::DesiredSliderDisplacement>(slider_displacement_service_name_);
 
-            open_door_activation_service_name_ = "open_door_/activate";
+            open_door_activation_service_name_ = "open_door_fsm/activate";
             open_door_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::OpenDoor>(open_door_activation_service_name_);
 
             //state_ = MainFSM::states::HOMING;
