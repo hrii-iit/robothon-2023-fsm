@@ -6,6 +6,9 @@
 #include "hrii_robothon_msgs/MoveSlider.h"
 #include "hrii_robothon_msgs/PressButton.h"
 #include "hrii_robothon_msgs/OpenDoor.h"
+#include "hrii_robothon_msgs/ProbeCircuit.h"
+#include "hrii_robothon_msgs/StowProbeCable.h"
+
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 
@@ -15,7 +18,7 @@
 class MainFSM
 {
     public:
-        MainFSM() : nh_priv_("~")
+        MainFSM() : nh_priv_("~"), tf_listener_{tf_buffer_}
         {
             homing_service_name_ = "homing_fsm/activate";
             homing_client_ = nh_.serviceClient<hrii_robothon_msgs::Homing>(homing_service_name_);
@@ -35,7 +38,12 @@ class MainFSM
             open_door_activation_service_name_ = "open_door_fsm/activate";
             open_door_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::OpenDoor>(open_door_activation_service_name_);
 
-            //state_ = MainFSM::states::HOMING;
+            probe_circuit_activation_service_name_ = "probe_circuit_fsm/activate";
+            probe_circuit_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::ProbeCircuit>(probe_circuit_activation_service_name_);
+
+            stow_probe_cable_activation_service_name_ = "stow_probe_cable_fsm/activate";
+            stow_probe_cable_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::StowProbeCable>(stow_probe_cable_activation_service_name_);
+
         }
 
         bool init()
@@ -124,19 +132,22 @@ class MainFSM
                     
                 case MainFSM::States::PROBE:
                 {
-                    /* code */
+                    if (!probeCircuit())
+                        state_ = MainFSM::States::ERROR;
                     break;
                 }
                 
                 case MainFSM::States::STOW_PROBE_CABLE:
                 {
-                    /* code */
+                    if (!stowProbeCable())
+                        state_ = MainFSM::States::ERROR;
                     break;
                 }
 
                 case MainFSM::States::PRESS_BLUE_BUTTON:
                 {
-                    /* code */
+                    if (!pressBlueButton())
+                        state_ = MainFSM::States::ERROR;
                     break;
                 }
 
@@ -196,17 +207,18 @@ class MainFSM
 
         std::string open_door_activation_service_name_;
         ros::ServiceClient open_door_activation_client_;
+
+        std::string probe_circuit_activation_service_name_;
+        ros::ServiceClient probe_circuit_activation_client_;
+
+        std::string stow_probe_cable_activation_service_name_;
+        ros::ServiceClient stow_probe_cable_activation_client_;
         
-        tf2_ros::Buffer tfBuffer;
-        tf2_ros::TransformListener tfListener{tfBuffer};
+        tf2_ros::Buffer tf_buffer_;
+        tf2_ros::TransformListener tf_listener_;
 
         // Robots attributs
         std::string left_robot_id_, right_robot_id_;
-
-
-        
-        Eigen::Affine3d base_link_T_slider_;
-
 
         // FSM states declaration
         enum class States {HOMING, 
@@ -292,7 +304,7 @@ class MainFSM
             // Real button pose
             geometry_msgs::TransformStamped blueButtonTransform;
             try{
-                blueButtonTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_blue_button_link", ros::Time(0), ros::Duration(3));
+                blueButtonTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_blue_button_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO("Tranform btw franka_left_link0 and task_board_blue_button_link found!");
             }
             catch (tf2::TransformException &ex) {
@@ -340,7 +352,7 @@ class MainFSM
             // Real button pose
             geometry_msgs::TransformStamped redButtonTransform;
             try{
-                redButtonTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0), ros::Duration(3));
+                redButtonTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
             }
             catch (tf2::TransformException &ex) {
@@ -385,7 +397,7 @@ class MainFSM
             // Real slider pose
             geometry_msgs::TransformStamped sliderTransform;
             try{
-                sliderTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_starting_slider_link", ros::Time(0), ros::Duration(3));
+                sliderTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_starting_slider_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO("Tranform btw franka_left_link0 and task_board_starting_slider_link found!");
             }
             catch (tf2::TransformException &ex) {
@@ -504,7 +516,7 @@ class MainFSM
             geometry_msgs::TransformStamped door_handle_transform;
             try
             {
-                door_handle_transform = tfBuffer.lookupTransform(open_door_srv.request.robot_id+"_link0", "task_board_door_handle_link", ros::Time(0), ros::Duration(3));
+                door_handle_transform = tf_buffer_.lookupTransform(open_door_srv.request.robot_id+"_link0", "task_board_door_handle_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO_STREAM("Tranform btw " << open_door_srv.request.robot_id << "_link0 and task_board_door_handle_link found!");
             }
             catch (tf2::TransformException &ex) 
@@ -518,7 +530,7 @@ class MainFSM
             geometry_msgs::TransformStamped center_of_rotation_pose_transform;
             try
             {
-                center_of_rotation_pose_transform = tfBuffer.lookupTransform(open_door_srv.request.robot_id+"_link0", "task_board_door_center_of_rotation_link", ros::Time(0), ros::Duration(3));
+                center_of_rotation_pose_transform = tf_buffer_.lookupTransform(open_door_srv.request.robot_id+"_link0", "task_board_door_center_of_rotation_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO_STREAM("Tranform btw " << open_door_srv.request.robot_id <<"_link0 and task_board_door_center_of_rotation_link found!");
             }
             catch (tf2::TransformException &ex) 
@@ -550,6 +562,107 @@ class MainFSM
             return true;
         }
 
+        bool probeCircuit()
+        {
+            ROS_INFO("Probe the desired circuit...");
+
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(probe_circuit_activation_service_name_) << " ROS service...");
+            probe_circuit_activation_client_.waitForExistence();
+
+            hrii_robothon_msgs::ProbeCircuit probe_circuit_srv;
+            probe_circuit_srv.request.robot_id = left_robot_id_;
+
+            // Get probe pose
+            geometry_msgs::TransformStamped probe_circuit_transform;
+            try
+            {
+                probe_circuit_transform = tf_buffer_.lookupTransform(probe_circuit_srv.request.robot_id+"_left_link0", "task_board_probe_circuit_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_probe_handle_link found!");
+            }
+            catch (tf2::TransformException &ex) {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_probe_handle_link NOT found!");
+                return false;
+            }
+
+            // Get circuit to probe pose
+            geometry_msgs::TransformStamped circuit_to_probe_transform;
+            try
+            {
+                circuit_to_probe_transform = tf_buffer_.lookupTransform(probe_circuit_srv.request.robot_id+"_left_link0", "task_board_circuit_to_probe_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_circuit_to_probe_link found!");
+            }
+            catch (tf2::TransformException &ex) {
+                ROS_WARN("%s",ex.what());
+                ros::Duration(1.0).sleep();
+                ROS_ERROR_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_circuit_to_probe_link NOT found!");
+                return false;
+            }
+
+            probe_circuit_srv.request.probe_handle_pose.pose = geometry_msgs::toPose(probe_circuit_transform.transform);
+            probe_circuit_srv.request.circuit_pose.pose = geometry_msgs::toPose(circuit_to_probe_transform.transform);
+
+            if (!probe_circuit_activation_client_.call(probe_circuit_srv))
+            {
+                ROS_ERROR("Error calling probe circuit activation service.");
+                return false;
+            }
+            else if (!probe_circuit_srv.response.success)
+            {
+                ROS_ERROR("Failure pressing button. Exiting.");
+                return false;
+            }
+            ROS_INFO("Circuit probed pressed.");
+
+            return true;
+        }
+
+        bool stowProbeCable()
+        {
+            ROS_INFO("Stowing probe cable...");
+
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(stow_probe_cable_activation_service_name_) << " ROS service...");
+            stow_probe_cable_activation_client_.waitForExistence();
+
+            // hrii_robothon_msgs::StowProbeCable stow_probe_cable_srv;
+            // stow_probe_cable_srv.request.robot_id = left_robot_id_;
+
+            // // Real button pose
+            // geometry_msgs::TransformStamped redButtonTransform;
+            // try{
+            //     redButtonTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0), ros::Duration(3));
+            //     ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
+            // }
+            // catch (tf2::TransformException &ex) {
+            //     ROS_WARN("%s",ex.what());
+            //     ros::Duration(1.0).sleep();
+            //     ROS_ERROR("Tranform btw franka_left_link0 and task_board_red_button_link NOT found!");
+            //     return false;
+            // }
+            // geometry_msgs::Pose red_button_pose;
+            // red_button_pose.orientation = redButtonTransform.transform.rotation;
+            // red_button_pose.position.x = redButtonTransform.transform.translation.x;
+            // red_button_pose.position.y = redButtonTransform.transform.translation.y;
+            // red_button_pose.position.z = redButtonTransform.transform.translation.z;
+
+            // ROS_INFO_STREAM("Red button pose: " << red_button_pose.position.x << ", " << red_button_pose.position.y << ", " << red_button_pose.position.z);
+            // ROS_INFO_STREAM("Red button orientation: " << red_button_pose.orientation.x << ", " << red_button_pose.orientation.y << ", " << red_button_pose.orientation.z << ", " << red_button_pose.orientation.w);
+
+            // press_button_srv.request.button_pose.pose = red_button_pose;
+
+            // if (!press_button_activation_client_.call(press_button_srv))
+            // {
+            //     ROS_ERROR("Error calling press button activation service.");
+            //     return false;
+            // }
+            // else if (!press_button_srv.response.success)
+            // {
+            //     ROS_ERROR("Failure pressing button. Exiting.");
+            //     return false;
+            // }
+            // ROS_INFO("Button pressed.");
+            return true;
+        }
 
         States resolveStateString(const std::string& state_str)
         {
@@ -566,7 +679,6 @@ class MainFSM
             return States::ERROR;
         }
 
-
 }; // class MainFSM
 
 int main(int argc, char **argv)
@@ -576,7 +688,6 @@ int main(int argc, char **argv)
     MainFSM fsm;
 
     if (!fsm.init()) return -1;
-
     fsm.spin();
 
     return 0;
