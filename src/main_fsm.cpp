@@ -299,7 +299,14 @@ class MainFSM
                 return false;
             }
             geometry_msgs::Pose blue_button_pose;
-            blue_button_pose.orientation = blueButtonTransform.transform.rotation;
+            // blue_button_pose.orientation = blueButtonTransform.transform.rotation;
+
+            // Use fixed orientation to avoid joint limits
+            blue_button_pose.orientation.x = -0.707;
+            blue_button_pose.orientation.y = 0.707;
+            blue_button_pose.orientation.z = 0.000;
+            blue_button_pose.orientation.w = 0.000;
+
             blue_button_pose.position.x = blueButtonTransform.transform.translation.x;
             blue_button_pose.position.y = blueButtonTransform.transform.translation.y;
             blue_button_pose.position.z = blueButtonTransform.transform.translation.z;
@@ -347,7 +354,14 @@ class MainFSM
                 return false;
             }
             geometry_msgs::Pose red_button_pose;
-            red_button_pose.orientation = redButtonTransform.transform.rotation;
+            // red_button_pose.orientation = redButtonTransform.transform.rotation;
+
+            // Use fixed orientation to avoid joint limits
+            red_button_pose.orientation.x = -0.707;
+            red_button_pose.orientation.y = 0.707;
+            red_button_pose.orientation.z = 0.000;
+            red_button_pose.orientation.w = 0.000;
+
             red_button_pose.position.x = redButtonTransform.transform.translation.x;
             red_button_pose.position.y = redButtonTransform.transform.translation.y;
             red_button_pose.position.z = redButtonTransform.transform.translation.z;
