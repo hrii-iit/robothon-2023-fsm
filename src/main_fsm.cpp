@@ -5,6 +5,7 @@
 #include "hrii_task_board_fsm/BoardDetection.h"
 #include "hrii_task_board_fsm/MoveSlider.h"
 #include "hrii_task_board_fsm/PressButton.h"
+#include "hrii_task_board_fsm/OpenDoor.h"
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 
@@ -29,6 +30,7 @@ class MainFSM
             slider_displacement_client_ = nh_.serviceClient<hrii_task_board_fsm::DesiredSliderDisplacement>(slider_displacement_service_name_);
 
             open_door_service_name_ = "open_door_/activate";
+            open_door_activation_client_ = nh_.serviceClient<hrii_task_board_fsm::OpenDoor>(open_door_service_name_);
 
             //state_ = MainFSM::states::HOMING;
         }
@@ -190,7 +192,7 @@ class MainFSM
         ros::ServiceClient slider_displacement_client_;
 
         std::string open_door_service_name_;
-        ros::ServiceClient open_door_client_;
+        ros::ServiceClient open_door_activation_client_;
         
         tf2_ros::Buffer tfBuffer;
         tf2_ros::TransformListener tfListener{tfBuffer};
@@ -495,28 +497,28 @@ class MainFSM
             hrii_task_board_fsm::OpenDoor open_door_srv;
             open_door_srv.request.robot_id = left_robot_id_;
 
-            // Home pose
-            geometry_msgs::Pose home_pose;
-            home_pose.position.x = 0.351;
-            home_pose.position.y = -0.233;
-            home_pose.position.z = 0.441;
-            home_pose.orientation.x = -0.693;
-            home_pose.orientation.y = 0.706;
-            home_pose.orientation.z = -0.104;
-            home_pose.orientation.w = -0.104;
-            open_door_srv.request.home_pose.pose = home_pose;
+            // Door handle pose
+            geometry_msgs::Pose door_handle_pose;
+            door_handle_pose.position.x = 0.351;
+            door_handle_pose.position.y = -0.233;
+            door_handle_pose.position.z = 0.441;
+            door_handle_pose.orientation.x = -0.693;
+            door_handle_pose.orientation.y = 0.706;
+            door_handle_pose.orientation.z = -0.104;
+            door_handle_pose.orientation.w = -0.104;
+            open_door_srv.request.door_handle_pose.pose = door_handle_pose;
 
-            if (!open_door_client_.call(open_door_srv))
+            if (!open_door_activation_client_.call(open_door_srv))
             {
-                ROS_ERROR("Error calling homing service.");
+                ROS_ERROR("Error calling open door service.");
                 return false;
             }
-            else if (!homing_srv.response.success)
+            else if (!open_door_srv.response.success)
             {
-                ROS_ERROR("Failure going home. Exiting.");
+                ROS_ERROR("Failure going to open door pose. Exiting.");
                 return false;
             }
-            ROS_INFO("Homing succeded.");
+            ROS_INFO("Open door succeded.");
             return true;
         }
 
