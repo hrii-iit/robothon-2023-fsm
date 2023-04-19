@@ -103,7 +103,7 @@
         
         <!-- Static tf to connect world and robots -->
         <!-- TODO: define new world pose! -->
-        <node pkg="tf2_ros" type="static_transform_publisher" name="world_franka_left_br" args="-0.420 0.323 -0.006 0 0 0 1 world franka_left_link0"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="world_franka_left_br" args="-0.383 0.268 -0.007 0 0 0 1 world franka_left_link0"/>
 
     </group>
 

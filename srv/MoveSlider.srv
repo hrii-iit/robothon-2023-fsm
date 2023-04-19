@@ -1,7 +1,0 @@
-string robot_id
-geometry_msgs/PoseStamped slider_pose
-geometry_msgs/PoseStamped reference_pose
-int32 times
----
-bool success
-string message

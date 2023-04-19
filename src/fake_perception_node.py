@@ -4,7 +4,7 @@ import numpy
 from std_msgs.msg import Float32
 import tf2_ros
 import geometry_msgs.msg
-from hrii_task_board_fsm.srv import BoardDetection,BoardDetectionResponse,DesiredSliderDisplacement,DesiredSliderDisplacementResponse
+from hrii_robothon_msgs.srv import BoardDetection,BoardDetectionResponse,DesiredSliderDisplacement,DesiredSliderDisplacementResponse
 
 count = 1
 

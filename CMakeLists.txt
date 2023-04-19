@@ -9,24 +9,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   eigen_conversions
   hrii_gri_interface
+  hrii_robothon_msgs
   hrii_trajectory_planner
   message_generation
-)
-
-add_service_files(FILES
-  DesiredSliderDisplacement.srv
-  PressButton.srv
-  MoveSlider.srv
-  MovePlug.srv
-  Homing.srv
-  BoardDetection.srv
-  OpenDoor.srv
-)
-
-generate_messages(
-   DEPENDENCIES
-   std_msgs
-   geometry_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -36,6 +21,7 @@ catkin_package(
  CATKIN_DEPENDS
    hrii_trajectory_planner
    hrii_gri_interface
+   hrii_robothon_msgs
 )
 
 include_directories(

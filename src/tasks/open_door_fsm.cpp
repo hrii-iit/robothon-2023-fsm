@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "hrii_task_board_fsm/OpenDoor.h"
+#include "hrii_robothon_msgs/OpenDoor.h"
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
 
@@ -23,8 +23,8 @@ class OpenDoorFSM
         ros::ServiceServer activation_server_;
         
 
-        bool activationCallback(hrii_task_board_fsm::OpenDoor::Request& req,
-                                hrii_task_board_fsm::OpenDoor::Response& res)
+        bool activationCallback(hrii_robothon_msgs::OpenDoor::Request& req,
+                                hrii_robothon_msgs::OpenDoor::Response& res)
         {
             ROS_INFO_STREAM("Activate door opening for robot: " << req.robot_id);
 

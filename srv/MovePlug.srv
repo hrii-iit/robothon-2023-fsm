@@ -1,5 +1,0 @@
-string robot_id
-geometry_msgs/PoseStamped plug_pose
----
-bool success
-string message

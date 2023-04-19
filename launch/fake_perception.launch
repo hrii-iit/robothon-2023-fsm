@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <!-- Fake imaging node -->
-    <node pkg="hrii_task_board_fsm" type="imaging_node" name="imagin_node" output="screen"/>
+    <!-- Fake perception node -->
+    <node pkg="hrii_task_board_fsm" type="fake_perception_node.py" name="fake_perception_node" output="screen"/>
      
 </launch>

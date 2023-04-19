@@ -2,7 +2,7 @@
 
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
-#include "hrii_task_board_fsm/PressButton.h"
+#include "hrii_robothon_msgs/PressButton.h"
 #include "hrii_task_board_fsm/utils/ControllerUtils.h"
 
 class PressButtonFSM
@@ -31,8 +31,8 @@ class PressButtonFSM
 
         std::string controller_name_;
 
-        bool activationCallback(hrii_task_board_fsm::PressButton::Request& req,
-                                hrii_task_board_fsm::PressButton::Response& res)
+        bool activationCallback(hrii_robothon_msgs::PressButton::Request& req,
+                                hrii_robothon_msgs::PressButton::Response& res)
         {
             ROS_INFO_STREAM("Activate press button interface for robot: " << req.robot_id);
 
@@ -57,7 +57,7 @@ class PressButtonFSM
 
             // Move to an approach pose w.r.t. the world frame
             geometry_msgs::Pose approach_pose = req.button_pose.pose;
-            approach_pose.position.z += 0.02;
+            approach_pose.position.z += 0.07; //0.02
 
             waypoints.push_back(approach_pose);
 
@@ -68,6 +68,11 @@ class PressButtonFSM
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
+
+            ROS_INFO("Temporarily moving to approach pose +5cm");
+            res.success = true;
+            res.message = "";
+            return true;
 
             // Move to the button pose w.r.t the world frame
             // waypoints.push_back(req.button_pose.pose);
