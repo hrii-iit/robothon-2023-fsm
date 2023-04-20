@@ -106,10 +106,10 @@ class MainFSM
                     break;
                 }
                     
-                case MainFSM::States::PRESS_RED_BUTTON:
+                case MainFSM::States::PRESS_BLUE_BUTTON:
                 {
-                    ROS_INFO("- - - PRESS RED BUTTON STATE - - -");
-                    if (!pressRedButton())
+                    ROS_INFO("- - - PRESS BLUE BUTTON STATE - - -");
+                    if (!pressBlueButton())
                         state_ = MainFSM::States::ERROR;
                     break;
                 }
@@ -132,6 +132,7 @@ class MainFSM
                     
                 case MainFSM::States::PROBE:
                 {
+                    ROS_INFO("- - - PROBE STATE - - -");
                     if (!probeCircuit())
                         state_ = MainFSM::States::ERROR;
                     break;
@@ -139,23 +140,19 @@ class MainFSM
                 
                 case MainFSM::States::STOW_PROBE_CABLE:
                 {
+                    ROS_INFO("- - - STOW PROBE CABLE STATE - - -");
                     if (!stowProbeCable())
                         state_ = MainFSM::States::ERROR;
                     break;
                 }
 
-                case MainFSM::States::PRESS_BLUE_BUTTON:
+                case MainFSM::States::PRESS_RED_BUTTON:
                 {
-                    if (!pressBlueButton())
+                    ROS_INFO("- - - PRESS RED BUTTON STATE - - -");
+                    if (!pressRedButton())
                         state_ = MainFSM::States::ERROR;
                     break;
                 }
-
-                // case MainFSM::States::EXIT:
-                // {
-                //     ROS_INFO("Tasks completed. Congratulation!");
-                //     break;
-                // }
 
                 default:
                 {
@@ -172,7 +169,7 @@ class MainFSM
             }
             if (state_ == MainFSM::States::EXIT)
             {
-                ROS_INFO("Tasks completed. Congratulation!");
+                ROS_INFO("Tasks completed. Congratulations!");
             }
             else if (state_ == MainFSM::States::ERROR)
             {
@@ -521,7 +518,7 @@ class MainFSM
 
         bool openDoor()
         {
-            ROS_INFO("Open door...");
+            ROS_INFO("Opening door...");
 
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(open_door_activation_service_name_) << " ROS service...");
             open_door_activation_client_.waitForExistence();
@@ -581,7 +578,7 @@ class MainFSM
 
         bool probeCircuit()
         {
-            ROS_INFO("Probe the desired circuit...");
+            ROS_INFO("Probing the desired circuit...");
 
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(probe_circuit_activation_service_name_) << " ROS service...");
             probe_circuit_activation_client_.waitForExistence();
