@@ -1,7 +1,5 @@
-
 #include "ros/ros.h"
 #include "hrii_robothon_msgs/BoardDetection.h"
-#include "hrii_robothon_msgs/DesiredSliderDisplacement.h"
 #include "hrii_robothon_msgs/Homing.h"
 #include "hrii_robothon_msgs/MovePlug.h"
 #include "hrii_robothon_msgs/MoveSlider.h"
@@ -33,9 +31,6 @@ class MainFSM
 
             move_slider_activation_service_name_ = "move_slider_fsm/activate";
             move_slider_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::MoveSlider>(move_slider_activation_service_name_);
-
-            slider_displacement_service_name_ = "/slider_desired_pose";
-            slider_displacement_client_ = nh_.serviceClient<hrii_robothon_msgs::DesiredSliderDisplacement>(slider_displacement_service_name_);
 
             move_plug_activation_service_name_ = "move_plug_fsm/activate";
             move_plug_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::MovePlug>(move_plug_activation_service_name_);
@@ -211,9 +206,6 @@ class MainFSM
 
         std::string move_slider_activation_service_name_;
         ros::ServiceClient move_slider_activation_client_;
-
-        std::string slider_displacement_service_name_;
-        ros::ServiceClient slider_displacement_client_;
 
         std::string move_plug_activation_service_name_;
         ros::ServiceClient move_plug_activation_client_;
@@ -421,7 +413,6 @@ class MainFSM
         {
             ROS_INFO("Moving the slider...");
 
-            hrii_robothon_msgs::DesiredSliderDisplacement slider_displacement_srv;
             hrii_robothon_msgs::MoveSlider move_slider_srv;
             move_slider_srv.request.robot_id = left_robot_id_;
             
@@ -444,38 +435,6 @@ class MainFSM
             slider_pose.position.z = sliderTransform.transform.translation.z;
             move_slider_srv.request.slider_pose.pose = slider_pose;
 
-            // We call the service to get the first slider displacement from imaging side
-            if (!slider_displacement_client_.call(slider_displacement_srv))
-            {
-                ROS_ERROR("Error calling imaging service.");
-                return false;
-            }
-            double displacement_1 = slider_displacement_srv.response.displacement;
-            ROS_INFO_STREAM("First displacement along slider y-axis: " << displacement_1);
-
-            Eigen::Vector3d displacement_vector(0, displacement_1, 0);
-            ROS_INFO_STREAM("First displacement along slider y-axis in Vector3:" << displacement_vector);
-
-            //From transformStamped to rotation matrix
-            Eigen::Quaternion<double> Q(sliderTransform.transform.rotation.w, sliderTransform.transform.rotation.x, sliderTransform.transform.rotation.y, sliderTransform.transform.rotation.z);
-            Eigen::Matrix3d displacement_transformation_rot_matrix = Q.toRotationMatrix();
-            ROS_INFO_STREAM("Rotation matrix between franka_left_link0 and board slider: " << displacement_transformation_rot_matrix);
-            
-            //Displacement vector in robot_base RF
-            displacement_vector =  displacement_transformation_rot_matrix * displacement_vector;
-            ROS_INFO_STREAM("First displacement respect robot frame: " << displacement_vector);
-
-            // Pose of the first reference point where we have to move the slider
-            geometry_msgs::Pose reference_pose_1;
-            reference_pose_1.position = slider_pose.position; //we assign to the first reference point the same initial pose of the slider
-            reference_pose_1.position.x += displacement_vector(0);      //then we add the computed displacement along each axes wrt robot RF
-            reference_pose_1.position.y += displacement_vector(1);
-            reference_pose_1.position.z += displacement_vector(2);          
-            reference_pose_1.orientation = slider_pose.orientation;     //we assing the same rotation of the slider
-
-            move_slider_srv.request.reference_pose.pose = reference_pose_1; 
-            move_slider_srv.request.times = 1; //the times request indicate if it is the first or second movement of the slider 
-
             if (!move_slider_activation_client_.call(move_slider_srv))
             {
                 ROS_ERROR("Error calling moving slider activation service.");
@@ -486,49 +445,7 @@ class MainFSM
                 ROS_ERROR("Failure moving slider. Exiting.");
                 return false;
             }
-            ROS_INFO("SLIDE MOVED THE FIRST TIME.");
-
-            //------------------  SECOND REFERENCE POINT OF THE SLIDER ------------------  
-
-            // We call the service to get the second slider displacement from imaging side
-            if (!slider_displacement_client_.call(slider_displacement_srv))
-            {
-                ROS_ERROR("Error calling imaging service.");
-                return false;
-            }
-            double displacement_2 = slider_displacement_srv.response.displacement;
-            ROS_INFO_STREAM("Second displacement along slider y-axis: " << displacement_2);
-
-            displacement_vector << 0, displacement_2, 0;
-            ROS_INFO_STREAM("Second displacement along slider y-axis in Vector3:" << displacement_vector);
-            
-            //Displacement vector in robot_base RF
-            displacement_vector =  displacement_transformation_rot_matrix * displacement_vector;
-            ROS_INFO_STREAM("Second displacement respect robot frame: " << displacement_vector);
-
-            // Pose of the first reference point where we have to move the slider
-            geometry_msgs::Pose reference_pose_2;
-            reference_pose_2.position = slider_pose.position; //we assign to the first reference point the same initial pose of the slider
-            reference_pose_2.position.x += displacement_vector(0);      //then we add the computed displacement along each axes wrt robot RF
-            reference_pose_2.position.y += displacement_vector(1);
-            reference_pose_2.position.z += displacement_vector(2);          
-            reference_pose_2.orientation = slider_pose.orientation;     //we assing the same rotation of the slider
-
-
-            move_slider_srv.request.reference_pose.pose = reference_pose_2;
-            move_slider_srv.request.times = 2; //the times request indicate if it is the first or second movement of the slider 
-
-            if (!move_slider_activation_client_.call(move_slider_srv))
-            {
-                ROS_ERROR("Error calling moving slider activation service.");
-                return false;
-            }
-            else if (!move_slider_srv.response.success)
-            {
-                ROS_ERROR("Failure moving slider. Exiting.");
-                return false;
-            }
-            ROS_INFO("SLIDE MOVED THE SECOND TIME.");
+            ROS_INFO("SLIDE MOVED!.");
 
             return true;
         }

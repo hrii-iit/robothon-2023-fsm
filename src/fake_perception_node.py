@@ -11,15 +11,26 @@ count = 1
 def slider_desired_displacement(req):
     #Computation of the desired pose from perception section (ToDo)
     global count
+    global task_accomplished
     if (count == 1):
         desired_displacement = -0.04
+        task_accomplished = False
         
     if (count == 2):
         desired_displacement = -0.02
+        task_accomplished = False
+                
+    if (count == 3):
+        desired_displacement = -0.03
+        task_accomplished = False
+
+    if (count == 4):
+        desired_displacement = 0.0
+        task_accomplished = True
 
     print("Returning [%s]"%(desired_displacement))
     count = count + 1
-    return DesiredSliderDisplacementResponse(desired_displacement)
+    return DesiredSliderDisplacementResponse(task_accomplished, desired_displacement)
 
 # Detecting fake board pose
 def board_detection(req):

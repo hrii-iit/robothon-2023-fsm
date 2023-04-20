@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include "hrii_robothon_msgs/MoveSlider.h"
+#include "hrii_robothon_msgs/DesiredSliderDisplacement.h"
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
 
@@ -8,10 +9,13 @@ class MoveSliderFSM
     public:
         MoveSliderFSM(ros::NodeHandle& nh) : 
             nh_(nh),
-            default_closing_gripper_speed_(10)
+            default_closing_gripper_speed_(5)
         {
             activation_server_ = nh_.advertiseService("activate", &MoveSliderFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
+
+            slider_displacement_service_name_ = "/slider_desired_pose";
+            slider_displacement_client_ = nh_.serviceClient<hrii_robothon_msgs::DesiredSliderDisplacement>(slider_displacement_service_name_);
         }
     
     private:
@@ -20,6 +24,9 @@ class MoveSliderFSM
         double default_closing_gripper_speed_;
         HRII::TrajectoryHelper::Ptr traj_helper_;
 
+        std::string slider_displacement_service_name_;
+        ros::ServiceClient slider_displacement_client_;
+
         ros::ServiceServer activation_server_;
         
 
@@ -27,13 +34,6 @@ class MoveSliderFSM
                                 hrii_robothon_msgs::MoveSlider::Response& res)
         {
             ROS_INFO_STREAM("Activate move slider interface for robot: " << req.robot_id);
-
-            //Wait until the controller_started param is found
-            // ROS_WARN("Waiting for controller to start...");
-            // do{
-            //     ros::Duration(0.5).sleep();
-            // }while(!HRII_Utils::getParamSuccess(req.robot_id+"controller_started"));
-            // ROS_INFO("Controller started.");
 
             // Trajectory helper declaration and initialization
             traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.robot_id+"/trajectory_handler");
@@ -44,78 +44,110 @@ class MoveSliderFSM
             // Initialize gripper and close it
             // gripper_ = std::make_shared<GripperInterfaceClientHelper>(req.robot_id+"trajectory_handler/execute_trajectory");
             // if (!gripper_->init()) return false;
-            // if (!gripper_->close(default_closing_gripper_speed_)) return false;
+            // // if (!gripper_->open(default_closing_gripper_speed_)) return false;
             // ROS_INFO("Gripper client initialized.");
             
-
             std::vector<geometry_msgs::Pose> waypoints;
             double execution_time = 5.0;
 
-            if(req.times == 1)
-            {
-                ROS_INFO("MOVE SLIDER FSM STARTED! Approaching for the first time the slider");
-                // Move to an approach pose upon the slider (w.r.t. the world frame)
-                geometry_msgs::Pose approach_pose = req.slider_pose.pose;
-                approach_pose.position.z += 0.02;
-                waypoints.push_back(approach_pose);
+            // Move to an approach pose upon the slider (w.r.t. the world frame)
+            ROS_INFO("MOVE SLIDER FSM STARTED! Approaching for the first time the slider");
+            geometry_msgs::Pose slider_pose, approach_pose;
+            slider_pose = req.slider_pose.pose;
+            approach_pose = slider_pose;
+            approach_pose.position.z += 0.02;
+            waypoints.push_back(approach_pose);
 
-                if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-                {   
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {   
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the first approaching slider pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
-                }
-
-                // Move to the slider pose (w.r.t. the world frame)
-                waypoints.push_back(req.slider_pose.pose);
-
-                if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-                {
-                res.success = false;
-                res.message = req.robot_id+" failed to grasp the slider.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-                }
-
-                res.message = " Slider grasped";
-                ROS_INFO(" Slider grasped");
-                waypoints.erase(waypoints.begin());
             }
-            
-            // Move the slider to the reference point of the screen
-            
-            waypoints.push_back(req.reference_pose.pose);
+
+            ros::Duration(3).sleep();
+            // Move to the slider pose (w.r.t. the world frame)
+            waypoints.push_back(slider_pose);
+            execution_time = 1.5;
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to move the slider to the desired pose.";
+                res.message = req.robot_id+" failed to grasp the slider.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
+            waypoints.erase(waypoints.begin());
 
-            ROS_INFO_STREAM(" Succeded in move the robot in the slider pose: " << req.times);
 
-            //Move back to the approach pose upon the slider only if it is the second movement
+            // Closing the gripper
+            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
 
-            if (req.times ==2)
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(slider_displacement_service_name_) << " ROS service...");
+            slider_displacement_client_.waitForExistence();
+
+            // Calling desired slider displacement service
+            hrii_robothon_msgs::DesiredSliderDisplacement desired_slider_displacement_srv;
+
+            if (!slider_displacement_client_.call(desired_slider_displacement_srv))
             {
-                // //waypoints.erase(waypoints.begin());
-                // waypoints.push_back(approach_pose);
-
-                // if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-                // {
-                //     res.success = false;
-                //     res.message = req.robot_id+" failed to return to the approach pose.";
-                //     ROS_ERROR_STREAM(res.message);
-                //     return true;
-                // }
-
-                ROS_INFO(" Succeded in move the robot back to approach initial pose");
+                ROS_ERROR("Error calling desired slider displacement service.");
+                return false;
             }
             
-            ros::Duration(5).sleep();
+            // Transform from tf to rotation matrix
+            Eigen::Quaternion<double> Q(slider_pose.orientation.w, slider_pose.orientation.x, slider_pose.orientation.y, slider_pose.orientation.z);
+            Eigen::Matrix3d displacement_transformation_rot_matrix = Q.toRotationMatrix();
+            ROS_INFO_STREAM("Rotation matrix between franka_left_link0 and board slider: " << displacement_transformation_rot_matrix);
+
+            // Loop until the task is not accomplished
+            while(!desired_slider_displacement_srv.response.task_accomplished)
+            {
+                // Move the slider to the desired displacement
+                float displacement = desired_slider_displacement_srv.response.displacement;
+                ROS_INFO_STREAM("Displacement along slider y-axis: " << displacement);
+
+                Eigen::Vector3d displacement_vector(0, displacement, 0);
+                //ROS_INFO_STREAM("Displacement along slider y-axis in Vector3:" << displacement_vector);
+
+                // Displacement vector in robot_base RF
+                displacement_vector =  displacement_transformation_rot_matrix * displacement_vector;
+                ROS_INFO_STREAM("First displacement respect robot frame: " << displacement_vector);
+
+                // Pose of the reference point where we have to move the slider
+                geometry_msgs::Pose reference_pose;
+                reference_pose.position = slider_pose.position; //we assign to the first reference point the same initial pose of the slider
+                reference_pose.position.x += displacement_vector(0);      //then we add the computed displacement along each axes wrt robot RF
+                reference_pose.position.y += displacement_vector(1);
+                reference_pose.position.z += displacement_vector(2);          
+                reference_pose.orientation = slider_pose.orientation;     //we assing the same rotation of the slider
+
+                // Move the robot to reference pose
+                waypoints.push_back(reference_pose);
+                execution_time = 5.0;
+
+                if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+                {
+                    res.success = false;
+                    res.message = req.robot_id+" failed to grasp the slider.";
+                    ROS_ERROR_STREAM(res.message);
+                    return true;
+                }
+                waypoints.erase(waypoints.begin());
+
+                // Temporary sleep to wait for vision unit, maybe remove in the future
+                ros::Duration(3).sleep();
+
+                // Check if task is accomplished or get new displacement
+                if (!slider_displacement_client_.call(desired_slider_displacement_srv))
+                {
+                    ROS_ERROR("Error calling desired slider displacement service.");
+                    return false;
+                }
+            }
+
+            ros::Duration(3).sleep();
             res.success = true;
             res.message = "";
             return true;

@@ -72,7 +72,7 @@ class MovePlugFSM
             }
 
             // Gripper opening
-            if (!gripper_->open(default_closing_gripper_speed_)) return false; //open the gripper in the approaching pose before going down
+            if (!gripper_->open(default_closing_gripper_speed_)) return false;
             waypoints.push_back(starting_pose);
 
             // Move to starting pose
@@ -86,8 +86,8 @@ class MovePlugFSM
             }
             waypoints.erase(waypoints.begin());
 
-            // Uncomment to use in the hardware case
-            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false; //close the gripper to grasp the plug
+            // Closing the gripper
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
 
             // Move the robot back to the starting hole connector approaching pose
             starting_approach_pose.position.z+=0.008;
