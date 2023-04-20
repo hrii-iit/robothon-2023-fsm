@@ -3,6 +3,7 @@ task_order:
   - BOARD_DETECTION
   - PRESS_RED_BUTTON
   - MOVE_SLIDER
+  - MOVE_PLUG_CABLE
   - OPEN_DOOR
   - PROBE                   
   - STOW_PROBE_CABLE

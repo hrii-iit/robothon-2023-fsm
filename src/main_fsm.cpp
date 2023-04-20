@@ -1,9 +1,11 @@
 
 #include "ros/ros.h"
+#include "hrii_robothon_msgs/BoardDetection.h"
 #include "hrii_robothon_msgs/DesiredSliderDisplacement.h"
 #include "hrii_robothon_msgs/Homing.h"
-#include "hrii_robothon_msgs/BoardDetection.h"
+#include "hrii_robothon_msgs/MovePlug.h"
 #include "hrii_robothon_msgs/MoveSlider.h"
+#include "hrii_robothon_msgs/OpenDoor.h"
 #include "hrii_robothon_msgs/PressButton.h"
 #include "hrii_robothon_msgs/OpenDoor.h"
 #include "hrii_robothon_msgs/ProbeCircuit.h"
@@ -34,6 +36,9 @@ class MainFSM
 
             slider_displacement_service_name_ = "/slider_desired_pose";
             slider_displacement_client_ = nh_.serviceClient<hrii_robothon_msgs::DesiredSliderDisplacement>(slider_displacement_service_name_);
+
+            move_plug_activation_service_name_ = "move_plug_fsm/activate";
+            move_plug_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::MovePlug>(move_plug_activation_service_name_);
 
             open_door_activation_service_name_ = "open_door_fsm/activate";
             open_door_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::OpenDoor>(open_door_activation_service_name_);
@@ -122,6 +127,14 @@ class MainFSM
                     break;
                 }
 
+                case MainFSM::States::MOVE_PLUG_CABLE:
+                {
+                    ROS_INFO("- - - MOVE PLUG STATE - - -");
+                    if (!movePlug())
+                        state_ = MainFSM::States::ERROR;
+                    break;
+                }
+
                 case MainFSM::States::OPEN_DOOR:
                 {
                     ROS_INFO("- - - OPEN DOOR STATE - - -");
@@ -202,6 +215,9 @@ class MainFSM
         std::string slider_displacement_service_name_;
         ros::ServiceClient slider_displacement_client_;
 
+        std::string move_plug_activation_service_name_;
+        ros::ServiceClient move_plug_activation_client_;
+
         std::string open_door_activation_service_name_;
         ros::ServiceClient open_door_activation_client_;
 
@@ -221,7 +237,8 @@ class MainFSM
         enum class States {HOMING, 
                             PRESS_RED_BUTTON, 
                             BOARD_DETECTION,
-                            MOVE_SLIDER, 
+                            MOVE_SLIDER,
+                            MOVE_PLUG_CABLE, 
                             OPEN_DOOR,
                             PROBE,
                             STOW_PROBE_CABLE,
@@ -516,6 +533,96 @@ class MainFSM
             return true;
         }
 
+        bool movePlug()
+        {
+            ROS_INFO("Moving the plug...");
+
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(move_plug_activation_service_name_) << " ROS service...");
+            move_plug_activation_client_.waitForExistence();
+
+            hrii_robothon_msgs::MovePlug move_plug_srv;
+            move_plug_srv.request.robot_id = left_robot_id_;
+
+            // ----------------------------- LOOKING FOR THE POSITION OF THE STARTING CONNECTOR HOLE -----------------------------
+
+            // Real black hole pose
+            geometry_msgs::TransformStamped startingConnectorHoleTransform;
+            try{
+                startingConnectorHoleTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_starting_connector_hole_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO("Tranform btw franka_left_link0 and task_board_starting_connector_hole_link found!");
+            }
+            catch (tf2::TransformException &ex) {
+                ROS_WARN("%s",ex.what());
+                ros::Duration(1.0).sleep();
+                ROS_ERROR("Tranform btw franka_left_link0 and task_board_starting_connector_hole_link NOT found!");
+                return false;
+            }
+            geometry_msgs::Pose starting_connector_hole_pose;
+            starting_connector_hole_pose.orientation = startingConnectorHoleTransform.transform.rotation;
+
+            // Use fixed orientation to avoid joint limits
+            // starting_connector_hole_pose.orientation.x = -0.707;
+            // starting_connector_hole_pose.orientation.y = 0.707;
+            // starting_connector_hole_pose.orientation.z = 0.000;
+            // starting_connector_hole_pose.orientation.w = 0.000;
+
+            starting_connector_hole_pose.position.x = startingConnectorHoleTransform.transform.translation.x;
+            starting_connector_hole_pose.position.y = startingConnectorHoleTransform.transform.translation.y;
+            starting_connector_hole_pose.position.z = startingConnectorHoleTransform.transform.translation.z;
+
+            ROS_INFO_STREAM("Starting connector hole position: " << starting_connector_hole_pose.position.x << ", " << starting_connector_hole_pose.position.y << ", " << starting_connector_hole_pose.position.z);
+            // ROS_INFO_STREAM("Red button or r: " << redButtonTransform.transform.rotation.x << ", " << redButtonTransform.transform.rotation.y << ", " << redButtonTransform.transform.rotation.z << ", " << redButtonTransform.transform.rotation.w);
+            ROS_INFO_STREAM("Starting connector hole orientation: " << starting_connector_hole_pose.orientation.x << ", " << starting_connector_hole_pose.orientation.y << ", " << starting_connector_hole_pose.orientation.z << ", " << starting_connector_hole_pose.orientation.w);
+
+            move_plug_srv.request.starting_plug_pose.pose = starting_connector_hole_pose;
+
+            // ----------------------------- LOOKING FOR THE POSITION OF THE ENDING CONNECTOR HOLE -----------------------------
+
+            // Real black hole pose
+            geometry_msgs::TransformStamped endingConnectorHoleTransform;
+            try{
+                endingConnectorHoleTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_ending_connector_hole_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO("Tranform btw franka_left_link0 and task_board_ending_connector_hole_link found!");
+            }
+            catch (tf2::TransformException &ex) {
+                ROS_WARN("%s",ex.what());
+                ros::Duration(1.0).sleep();
+                ROS_ERROR("Tranform btw franka_left_link0 and task_board_ending_connector_hole_link NOT found!");
+                return false;
+            }
+            geometry_msgs::Pose ending_connector_hole_pose;
+            ending_connector_hole_pose.orientation = endingConnectorHoleTransform.transform.rotation;
+
+            // Use fixed orientation to avoid joint limits
+            // starting_connector_hole_pose.orientation.x = -0.707;
+            // starting_connector_hole_pose.orientation.y = 0.707;
+            // starting_connector_hole_pose.orientation.z = 0.000;
+            // starting_connector_hole_pose.orientation.w = 0.000;
+
+            ending_connector_hole_pose.position.x = endingConnectorHoleTransform.transform.translation.x;
+            ending_connector_hole_pose.position.y = endingConnectorHoleTransform.transform.translation.y;
+            ending_connector_hole_pose.position.z = endingConnectorHoleTransform.transform.translation.z;
+
+            ROS_INFO_STREAM("Ending connector hole position: " << ending_connector_hole_pose.position.x << ", " << ending_connector_hole_pose.position.y << ", " << ending_connector_hole_pose.position.z);
+            // ROS_INFO_STREAM("Red button or r: " << redButtonTransform.transform.rotation.x << ", " << redButtonTransform.transform.rotation.y << ", " << redButtonTransform.transform.rotation.z << ", " << redButtonTransform.transform.rotation.w);
+            ROS_INFO_STREAM("Ending connector hole orientation: " << ending_connector_hole_pose.orientation.x << ", " << ending_connector_hole_pose.orientation.y << ", " << ending_connector_hole_pose.orientation.z << ", " << ending_connector_hole_pose.orientation.w);
+
+            move_plug_srv.request.ending_plug_pose.pose = ending_connector_hole_pose;
+
+            if (!move_plug_activation_client_.call(move_plug_srv))
+            {
+                ROS_ERROR("Error calling move plug activation service.");
+                return false;
+            }
+            else if (!move_plug_srv.response.success)
+            {
+                ROS_ERROR("Failure moving the plug. Exiting.");
+                return false;
+            }
+            ROS_INFO("Plug moved.");
+            return true;
+        }
+
         bool openDoor()
         {
             ROS_INFO("Opening door...");
@@ -684,6 +791,7 @@ class MainFSM
             if (state_str.compare("board_detection") == 0 || state_str.compare("BOARD_DETECTION") == 0) return States::BOARD_DETECTION;
             if (state_str.compare("press_red_button") == 0 || state_str.compare("PRESS_RED_BUTTON") == 0) return States::PRESS_RED_BUTTON;
             if (state_str.compare("move_slider") == 0 || state_str.compare("MOVE_SLIDER") == 0) return States::MOVE_SLIDER;
+            if (state_str.compare("move_plug_cable") == 0 || state_str.compare("MOVE_PLUG_CABLE") == 0) return States::MOVE_PLUG_CABLE;
             if (state_str.compare("open_door") == 0 || state_str.compare("OPEN_DOOR") == 0) return States::OPEN_DOOR;
             if (state_str.compare("probe") == 0 || state_str.compare("PROBE") == 0) return States::PROBE;
             if (state_str.compare("stow_probe_cable") == 0 || state_str.compare("STOW_PROBE_CABLE") == 0) return States::STOW_PROBE_CABLE;

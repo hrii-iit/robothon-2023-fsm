@@ -8,7 +8,8 @@ class MovePlugFSM
     public:
         MovePlugFSM(ros::NodeHandle& nh) : 
             nh_(nh),
-            default_closing_gripper_speed_(10)
+            default_closing_gripper_speed_(10),
+            default_closing_gripper_force_(10)
         {
             activation_server_ = nh_.advertiseService("activate", &MovePlugFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
@@ -18,6 +19,7 @@ class MovePlugFSM
         ros::NodeHandle nh_;
         GripperInterfaceClientHelper::Ptr gripper_;
         double default_closing_gripper_speed_;
+        double default_closing_gripper_force_;
         HRII::TrajectoryHelper::Ptr traj_helper_;
 
         ros::ServiceServer activation_server_;
@@ -49,41 +51,66 @@ class MovePlugFSM
             ROS_INFO("MOVE PLUG FSM STARTED!");
 
             // Move to an approach pose w.r.t. the world frame
-            geometry_msgs::Pose approach_pose = req.plug_pose.pose;
-            approach_pose.position.z += 0.02;
-            waypoints.push_back(approach_pose);
+            geometry_msgs::Pose starting_approach_pose = req.starting_plug_pose.pose;
+            starting_approach_pose.position.z += 0.02;
 
+            geometry_msgs::Pose ending_approach_pose = req.ending_plug_pose.pose;
+            ending_approach_pose.position.z += 0.02;
+
+            //Move the robot to the starting hole connector approaching pose
+
+            waypoints.push_back(starting_approach_pose);
+            
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the approach pose.";
+                res.message = req.robot_id+" failed to reach the starting approach pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
-
-            waypoints.push_back(req.plug_pose.pose);
-
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-            {
-                res.success = false;
-                res.message = req.robot_id+" failed to reach the move plug pose.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-            }
-
-            waypoints.erase(waypoints.begin());
-            waypoints.push_back(approach_pose);
-
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-            {
-                res.success = false;
-                res.message = req.robot_id+" failed to return to the approach pose.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-            }
-
             // Gripper opening
+            if (!gripper_->open(default_closing_gripper_speed_)) return false;   //open the gripper in the approaching pose before going down
+            geometry_msgs::Pose grasping_pose = req.starting_plug_pose.pose;
+            grasping_pose.position.z += 0.01;
+            waypoints.push_back(grasping_pose);
+
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the starting move plug pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+            waypoints.erase(waypoints.begin());
+
+            //Uncomment to use in the hardware case
+            // if (!gripper_->(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;//close the gripper to grasp the plug
+
+            //Move the robot to the ending hole connector approaching pose
+
+            waypoints.push_back(ending_approach_pose);
+
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the ending approach pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+            waypoints.erase(waypoints.begin());
+            waypoints.push_back(req.ending_plug_pose.pose);
+
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the ending move plug pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
             if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            waypoints.push_back(ending_approach_pose);
+
+            
 
             res.success = true;
             res.message = "";

@@ -148,6 +148,7 @@
         <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="move_slider_fsm" name="move_slider_fsm" output="screen" respawn="false"/>
+        <node pkg="hrii_task_board_fsm" type="move_plug_fsm" name="move_plug_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="open_door_fsm" name="open_door_fsm" output="screen" respawn="false"/>
         
     </group>
