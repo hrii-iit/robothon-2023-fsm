@@ -260,6 +260,8 @@ class MainFSM
         {
             ROS_INFO("Detecting board...");
 
+            ros::Duration(1).sleep();
+
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_service_name_) << " ROS service...");
             board_detection_client_.waitForExistence();
 
@@ -370,6 +372,7 @@ class MainFSM
             red_button_pose.position.z = redButtonTransform.transform.translation.z;
 
             ROS_INFO_STREAM("Red button pose: " << red_button_pose.position.x << ", " << red_button_pose.position.y << ", " << red_button_pose.position.z);
+            // ROS_INFO_STREAM("Red button or r: " << redButtonTransform.transform.rotation.x << ", " << redButtonTransform.transform.rotation.y << ", " << redButtonTransform.transform.rotation.z << ", " << redButtonTransform.transform.rotation.w);
             ROS_INFO_STREAM("Red button orientation: " << red_button_pose.orientation.x << ", " << red_button_pose.orientation.y << ", " << red_button_pose.orientation.z << ", " << red_button_pose.orientation.w);
 
             press_button_srv.request.button_pose.pose = red_button_pose;
