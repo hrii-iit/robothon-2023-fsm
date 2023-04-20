@@ -66,7 +66,7 @@ class HomingFSM
                 return true;
             }
 
-            ros::Duration(5).sleep();
+            // ros::Duration(5).sleep();
 
             res.success = true;
             res.message = "";
