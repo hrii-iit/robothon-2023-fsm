@@ -15,12 +15,12 @@
 
     <!-- Task board arguments -->
     <arg name="task_board_publish_manual_tf" default="$(arg sim)"/>
-    <arg name="task_board_init_pose_x" default="0.0"/>
-    <arg name="task_board_init_pose_y" default="0.0"/>
-    <arg name="task_board_init_pose_z" default="0.0"/>
+    <arg name="task_board_init_pose_x" default="0.053"/>
+    <arg name="task_board_init_pose_y" default="-0.030"/>
+    <arg name="task_board_init_pose_z" default="0.010"/>
     <arg name="task_board_init_pose_roll" default="0.0"/>
     <arg name="task_board_init_pose_pitch" default="0.0"/>
-    <arg name="task_board_init_pose_yaw" default="0.7839"/>
+    <arg name="task_board_init_pose_yaw" default="0.0"/>
 
     <!-- Left robot arguments -->
     <arg name="left_robot_id" default="franka_left"/>
@@ -41,7 +41,7 @@
     <arg name="left_robot_init_pose_yaw" default="0"/>
     <arg name="left_robot_init_pose_x" default="-0.383"/>
     <arg name="left_robot_init_pose_y" default="0.268"/>
-    <arg name="left_robot_init_pose_z" default="0"/> <!-- -0.007 in real robot -->
+    <arg name="left_robot_init_pose_z" default="0"/> <!-- it was -0.007 -->
     <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/controllers/franka_left_cart_hybrid_motion_force_controller.yaml"/>
     
     <arg name="left_robot_launch_interactive_marker" default="false"/>
