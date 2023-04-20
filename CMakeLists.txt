@@ -64,3 +64,13 @@ add_executable(${PROJECT_NAME}_open_door_fsm src/tasks/open_door_fsm.cpp)
 set_target_properties(${PROJECT_NAME}_open_door_fsm PROPERTIES OUTPUT_NAME "open_door_fsm")
 add_dependencies(${PROJECT_NAME}_open_door_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_open_door_fsm ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_probe_circuit_fsm src/tasks/probe_circuit_fsm.cpp)
+set_target_properties(${PROJECT_NAME}_probe_circuit_fsm PROPERTIES OUTPUT_NAME "probe_circuit_fsm")
+add_dependencies(${PROJECT_NAME}_probe_circuit_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_probe_circuit_fsm ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_stow_probe_cable_fsm src/tasks/stow_probe_cable_fsm.cpp)
+set_target_properties(${PROJECT_NAME}_stow_probe_cable_fsm PROPERTIES OUTPUT_NAME "stow_probe_cable_fsm")
+add_dependencies(${PROJECT_NAME}_stow_probe_cable_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_stow_probe_cable_fsm ${catkin_LIBRARIES})

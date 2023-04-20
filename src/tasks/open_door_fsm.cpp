@@ -90,7 +90,7 @@ class OpenDoorFSM
 
                 // Compute the new desired angle
                 double desired_angle = t_interp * req.final_desired_angle;
-                ROS_WARN_STREAM(desired_angle);
+                ROS_INFO_STREAM_THROTTLE(1, "Desired angle: " << desired_angle << "/" << req.final_desired_angle);
 
                 // Compute desired pose
                 Eigen::Quaterniond center_of_rotation_T_desired_angle_quat = 
@@ -107,10 +107,6 @@ class OpenDoorFSM
                 tf::poseEigenToMsg(w_T_desired_pose, w_T_desired_pose_msg.pose);
                 w_T_desired_pose_msg.header.stamp = ros::Time::now();
                 w_T_desired_pose_msg.header.frame_id=req.robot_id+"_link0";
-
-                // ROS_INFO_STREAM("center_of_rotation_T_desired_angle_pose:\t" << center_of_rotation_T_desired_angle_pose.matrix());
-                // ROS_INFO_STREAM("w_T_center_of_rotation:\t" << w_T_center_of_rotation.matrix());
-                // ROS_INFO_STREAM("center_of_rotation_T_desired_angle_pose:\t" << center_of_rotation_T_desired_angle_pose.matrix());
 
                 desired_pose_pub_.publish(w_T_desired_pose_msg);
 

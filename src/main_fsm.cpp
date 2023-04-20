@@ -587,15 +587,15 @@ class MainFSM
             probe_circuit_srv.request.robot_id = left_robot_id_;
 
             // Get probe pose
-            geometry_msgs::TransformStamped probe_circuit_transform;
+            geometry_msgs::TransformStamped probe_handle_transform;
             try
             {
-                probe_circuit_transform = tf_buffer_.lookupTransform(probe_circuit_srv.request.robot_id+"_left_link0", "task_board_probe_circuit_link", ros::Time(0), ros::Duration(3));
-                ROS_INFO_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_probe_handle_link found!");
+                probe_handle_transform = tf_buffer_.lookupTransform(probe_circuit_srv.request.robot_id+"_link0", "task_board_probe_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_link0 and task_board_probe_link found!");
             }
             catch (tf2::TransformException &ex) {
                 ROS_WARN("%s",ex.what());
-                ROS_ERROR_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_probe_handle_link NOT found!");
+                ROS_ERROR_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_link0 and task_board_probe_link NOT found!");
                 return false;
             }
 
@@ -603,17 +603,17 @@ class MainFSM
             geometry_msgs::TransformStamped circuit_to_probe_transform;
             try
             {
-                circuit_to_probe_transform = tf_buffer_.lookupTransform(probe_circuit_srv.request.robot_id+"_left_link0", "task_board_circuit_to_probe_link", ros::Time(0), ros::Duration(3));
-                ROS_INFO_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_circuit_to_probe_link found!");
+                circuit_to_probe_transform = tf_buffer_.lookupTransform(probe_circuit_srv.request.robot_id+"_link0", "task_board_circuit_to_probe_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_link0 and task_board_circuit_to_probe_link found!");
             }
             catch (tf2::TransformException &ex) {
                 ROS_WARN("%s",ex.what());
                 ros::Duration(1.0).sleep();
-                ROS_ERROR_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_left_link0 and task_board_circuit_to_probe_link NOT found!");
+                ROS_ERROR_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_link0 and task_board_circuit_to_probe_link NOT found!");
                 return false;
             }
 
-            probe_circuit_srv.request.probe_handle_pose.pose = geometry_msgs::toPose(probe_circuit_transform.transform);
+            probe_circuit_srv.request.probe_handle_pose.pose = geometry_msgs::toPose(probe_handle_transform.transform);
             probe_circuit_srv.request.circuit_pose.pose = geometry_msgs::toPose(circuit_to_probe_transform.transform);
 
             if (!probe_circuit_activation_client_.call(probe_circuit_srv))
