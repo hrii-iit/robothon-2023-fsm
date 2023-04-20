@@ -560,18 +560,11 @@ class MainFSM
             geometry_msgs::Pose starting_connector_hole_pose;
             starting_connector_hole_pose.orientation = startingConnectorHoleTransform.transform.rotation;
 
-            // Use fixed orientation to avoid joint limits
-            // starting_connector_hole_pose.orientation.x = -0.707;
-            // starting_connector_hole_pose.orientation.y = 0.707;
-            // starting_connector_hole_pose.orientation.z = 0.000;
-            // starting_connector_hole_pose.orientation.w = 0.000;
-
             starting_connector_hole_pose.position.x = startingConnectorHoleTransform.transform.translation.x;
             starting_connector_hole_pose.position.y = startingConnectorHoleTransform.transform.translation.y;
             starting_connector_hole_pose.position.z = startingConnectorHoleTransform.transform.translation.z;
 
             ROS_INFO_STREAM("Starting connector hole position: " << starting_connector_hole_pose.position.x << ", " << starting_connector_hole_pose.position.y << ", " << starting_connector_hole_pose.position.z);
-            // ROS_INFO_STREAM("Red button or r: " << redButtonTransform.transform.rotation.x << ", " << redButtonTransform.transform.rotation.y << ", " << redButtonTransform.transform.rotation.z << ", " << redButtonTransform.transform.rotation.w);
             ROS_INFO_STREAM("Starting connector hole orientation: " << starting_connector_hole_pose.orientation.x << ", " << starting_connector_hole_pose.orientation.y << ", " << starting_connector_hole_pose.orientation.z << ", " << starting_connector_hole_pose.orientation.w);
 
             move_plug_srv.request.starting_plug_pose.pose = starting_connector_hole_pose;
@@ -593,18 +586,11 @@ class MainFSM
             geometry_msgs::Pose ending_connector_hole_pose;
             ending_connector_hole_pose.orientation = endingConnectorHoleTransform.transform.rotation;
 
-            // Use fixed orientation to avoid joint limits
-            // starting_connector_hole_pose.orientation.x = -0.707;
-            // starting_connector_hole_pose.orientation.y = 0.707;
-            // starting_connector_hole_pose.orientation.z = 0.000;
-            // starting_connector_hole_pose.orientation.w = 0.000;
-
             ending_connector_hole_pose.position.x = endingConnectorHoleTransform.transform.translation.x;
             ending_connector_hole_pose.position.y = endingConnectorHoleTransform.transform.translation.y;
             ending_connector_hole_pose.position.z = endingConnectorHoleTransform.transform.translation.z;
 
             ROS_INFO_STREAM("Ending connector hole position: " << ending_connector_hole_pose.position.x << ", " << ending_connector_hole_pose.position.y << ", " << ending_connector_hole_pose.position.z);
-            // ROS_INFO_STREAM("Red button or r: " << redButtonTransform.transform.rotation.x << ", " << redButtonTransform.transform.rotation.y << ", " << redButtonTransform.transform.rotation.z << ", " << redButtonTransform.transform.rotation.w);
             ROS_INFO_STREAM("Ending connector hole orientation: " << ending_connector_hole_pose.orientation.x << ", " << ending_connector_hole_pose.orientation.y << ", " << ending_connector_hole_pose.orientation.z << ", " << ending_connector_hole_pose.orientation.w);
 
             move_plug_srv.request.ending_plug_pose.pose = ending_connector_hole_pose;
