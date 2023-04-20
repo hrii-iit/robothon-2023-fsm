@@ -51,13 +51,13 @@ class PressButtonFSM
             ROS_INFO("Gripper client initialized.");
 
             std::vector<geometry_msgs::Pose> waypoints;
-            double execution_time = 5.0;
+            double execution_time = 3.0;
 
             ROS_INFO("PRESS BUTTON FSM STARTED!");
 
             // Move to an approach pose w.r.t. the world frame
             geometry_msgs::Pose approach_pose = req.button_pose.pose;
-            approach_pose.position.z += 0.07; //0.02
+            approach_pose.position.z += 0.02;
 
             waypoints.push_back(approach_pose);
 
@@ -69,13 +69,20 @@ class PressButtonFSM
                 return true;
             }
 
-            ROS_INFO("Temporarily moving to approach pose +5cm");
-            res.success = true;
-            res.message = "";
-            return true;
+            // Move to an approach pose w.r.t. the world frame
+            approach_pose.position.z -= 0.015;
+            execution_time = 1.0;
 
-            // Move to the button pose w.r.t the world frame
-            // waypoints.push_back(req.button_pose.pose);
+            waypoints.erase(waypoints.begin());
+            waypoints.push_back(approach_pose);
+
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the approach pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
 
             // Switch to task force in Z-axis
             geometry_msgs::WrenchStamped desired_wrench;
@@ -91,18 +98,12 @@ class PressButtonFSM
                 return false;
             }
             
-            // if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to press the button pose.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
-
             waypoints.erase(waypoints.begin());
 
             // We move the robot back to the approach pose upon the button
+            approach_pose.position.z += 0.055; // button_pose + 0.05m
             waypoints.push_back(approach_pose);
+            execution_time = 3.0;
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
@@ -111,9 +112,6 @@ class PressButtonFSM
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
-
-            // Gripper opening
-            // if (!gripper_->open(default_closing_gripper_speed_)) return false;
 
             res.success = true;
             res.message = "";
