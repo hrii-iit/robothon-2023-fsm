@@ -548,7 +548,7 @@ class MainFSM
             // Real black hole pose
             geometry_msgs::TransformStamped startingConnectorHoleTransform;
             try{
-                startingConnectorHoleTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_starting_connector_hole_link", ros::Time(0), ros::Duration(3));
+                startingConnectorHoleTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_starting_connector_hole_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO("Tranform btw franka_left_link0 and task_board_starting_connector_hole_link found!");
             }
             catch (tf2::TransformException &ex) {
@@ -581,7 +581,7 @@ class MainFSM
             // Real black hole pose
             geometry_msgs::TransformStamped endingConnectorHoleTransform;
             try{
-                endingConnectorHoleTransform = tfBuffer.lookupTransform("franka_left_link0", "task_board_ending_connector_hole_link", ros::Time(0), ros::Duration(3));
+                endingConnectorHoleTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_ending_connector_hole_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO("Tranform btw franka_left_link0 and task_board_ending_connector_hole_link found!");
             }
             catch (tf2::TransformException &ex) {
