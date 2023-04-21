@@ -46,7 +46,7 @@ class MoveSliderFSM
             // Initialize gripper and close it
             gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.robot_id+"/gripper");
             if (!gripper_->init()) return false;
-            // if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            if (!gripper_->open(default_closing_gripper_speed_)) return false;
             ROS_INFO("Gripper client initialized.");
             
             std::vector<geometry_msgs::Pose> waypoints;
@@ -103,8 +103,8 @@ class MoveSliderFSM
             waypoints.erase(waypoints.begin());
 
             // Closing the gripper
-            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
-            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
+            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
 
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(slider_displacement_service_name_) << " ROS service...");
             slider_displacement_client_.waitForExistence();

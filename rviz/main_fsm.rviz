@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.8689458966255188
     Tree Height: 388
@@ -62,6 +63,62 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
+            camera_bottom_screw_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_color_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_color_optical_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_depth_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_depth_optical_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_left_ir_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_left_ir_optical_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            camera_right_ir_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            camera_right_ir_optical_frame:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            franka_left_franka_gripper_hand:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            franka_left_franka_gripper_leftfinger:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            franka_left_franka_gripper_rightfinger:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             franka_left_link0:
               Alpha: 1
               Show Axes: false
@@ -234,10 +291,112 @@ Visualization Manager:
       Enabled: true
       Name: Franka Right
     - Class: rviz/TF
-      Enabled: false
+      Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        camera_bottom_screw_frame:
+          Value: false
+        camera_color_frame:
+          Value: false
+        camera_color_optical_frame:
+          Value: false
+        camera_depth_frame:
+          Value: false
+        camera_depth_optical_frame:
+          Value: false
+        camera_left_ir_frame:
+          Value: false
+        camera_left_ir_optical_frame:
+          Value: false
+        camera_link:
+          Value: false
+        camera_right_ir_frame:
+          Value: false
+        camera_right_ir_optical_frame:
+          Value: false
+        franka_left_EE:
+          Value: false
+        franka_left_K:
+          Value: false
+        franka_left_NE:
+          Value: false
+        franka_left_franka_gripper_hand:
+          Value: false
+        franka_left_franka_gripper_leftfinger:
+          Value: false
+        franka_left_franka_gripper_rightfinger:
+          Value: false
+        franka_left_link0:
+          Value: false
+        franka_left_link0_sc:
+          Value: false
+        franka_left_link1:
+          Value: false
+        franka_left_link1_sc:
+          Value: false
+        franka_left_link2:
+          Value: false
+        franka_left_link2_sc:
+          Value: false
+        franka_left_link3:
+          Value: false
+        franka_left_link3_sc:
+          Value: false
+        franka_left_link4:
+          Value: false
+        franka_left_link4_sc:
+          Value: false
+        franka_left_link5:
+          Value: false
+        franka_left_link5_sc:
+          Value: false
+        franka_left_link6:
+          Value: false
+        franka_left_link6_sc:
+          Value: false
+        franka_left_link7:
+          Value: false
+        franka_left_link7_sc:
+          Value: false
+        franka_left_link8:
+          Value: false
+        franka_left_task_frame:
+          Value: false
+        task_board_base_link:
+          Value: false
+        task_board_blue_button_link:
+          Value: false
+        task_board_box_link:
+          Value: false
+        task_board_circuit_to_probe_link:
+          Value: false
+        task_board_door_center_of_rotation_link:
+          Value: false
+        task_board_door_handle_link:
+          Value: false
+        task_board_door_link:
+          Value: false
+        task_board_ending_connector_hole_link:
+          Value: false
+        task_board_left_wire_reel_link:
+          Value: false
+        task_board_m5_display_link:
+          Value: false
+        task_board_probe_handle_link:
+          Value: false
+        task_board_probe_link:
+          Value: false
+        task_board_red_button_link:
+          Value: false
+        task_board_right_wire_reel_link:
+          Value: false
+        task_board_starting_connector_hole_link:
+          Value: false
+        task_board_starting_slider_link:
+          Value: false
+        world:
+          Value: false
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
@@ -245,9 +404,88 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        world:
+          franka_left_link0:
+            franka_left_link0_sc:
+              {}
+            franka_left_link1:
+              franka_left_link1_sc:
+                {}
+              franka_left_link2:
+                franka_left_link2_sc:
+                  {}
+                franka_left_link3:
+                  franka_left_link3_sc:
+                    {}
+                  franka_left_link4:
+                    franka_left_link4_sc:
+                      {}
+                    franka_left_link5:
+                      franka_left_link5_sc:
+                        {}
+                      franka_left_link6:
+                        franka_left_link6_sc:
+                          {}
+                        franka_left_link7:
+                          franka_left_link7_sc:
+                            {}
+                          franka_left_link8:
+                            camera_bottom_screw_frame:
+                              camera_link:
+                                camera_color_frame:
+                                  camera_color_optical_frame:
+                                    {}
+                                camera_depth_frame:
+                                  camera_depth_optical_frame:
+                                    {}
+                                camera_left_ir_frame:
+                                  camera_left_ir_optical_frame:
+                                    {}
+                                camera_right_ir_frame:
+                                  camera_right_ir_optical_frame:
+                                    {}
+                            franka_left_NE:
+                              franka_left_EE:
+                                franka_left_K:
+                                  {}
+                                franka_left_task_frame:
+                                  {}
+                            franka_left_franka_gripper_hand:
+                              franka_left_franka_gripper_leftfinger:
+                                {}
+                              franka_left_franka_gripper_rightfinger:
+                                {}
+          task_board_base_link:
+            task_board_blue_button_link:
+              {}
+            task_board_box_link:
+              {}
+            task_board_door_link:
+              task_board_circuit_to_probe_link:
+                {}
+              task_board_door_center_of_rotation_link:
+                {}
+              task_board_door_handle_link:
+                {}
+            task_board_ending_connector_hole_link:
+              {}
+            task_board_left_wire_reel_link:
+              {}
+            task_board_m5_display_link:
+              {}
+            task_board_probe_handle_link:
+              task_board_probe_link:
+                {}
+            task_board_red_button_link:
+              {}
+            task_board_right_wire_reel_link:
+              {}
+            task_board_starting_connector_hole_link:
+              {}
+            task_board_starting_slider_link:
+              {}
       Update Interval: 0
-      Value: false
+      Value: true
     - Class: rviz/Image
       Enabled: true
       Image Topic: /d435_camera/color/image_raw
@@ -284,6 +522,10 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        task_board_circuit_to_probe_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         task_board_door_center_of_rotation_link:
           Alpha: 1
           Show Axes: false
