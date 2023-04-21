@@ -35,3 +35,12 @@ roslaunch hrii_task_board_fsm main_fsm.launch
 # if you want to run a fake perception node
 roslaunch hrii_task_board_fsm fake_perception.launch
 ```
+
+# Tips
+In the file config/fsm/default_task_order.yaml you can select the task execution order.
+You can also define a customized file that will be ignored by git, just create it in the same folder under the name _custom_task_order.yaml_
+
+To move the robot to a decent initial joint configuration run the command:
+```bash
+mon launch franka_example_controllers move_to_start.launch robot_ip:=192.168.0.102
+```
