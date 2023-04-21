@@ -13,15 +13,15 @@ def slider_desired_displacement(req):
     global count
     global task_accomplished
     if (count == 1):
-        desired_displacement = -0.04
+        desired_displacement = -0.013 # Absolute movement w.r.t. initial pose
         task_accomplished = False
         
     if (count == 2):
-        desired_displacement = -0.02
+        desired_displacement = -0.027 # Absolute movement w.r.t. initial pose - out of scale
         task_accomplished = False
                 
     if (count == 3):
-        desired_displacement = -0.03
+        desired_displacement = -0.00 # Absolute movement w.r.t. initial pose
         task_accomplished = False
 
     if (count == 4):

@@ -9,7 +9,8 @@ class MoveSliderFSM
     public:
         MoveSliderFSM(ros::NodeHandle& nh) : 
             nh_(nh),
-            default_closing_gripper_speed_(5)
+            default_closing_gripper_force_(0.2),
+            default_closing_gripper_speed_(0.02)
         {
             activation_server_ = nh_.advertiseService("activate", &MoveSliderFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
@@ -22,6 +23,7 @@ class MoveSliderFSM
         ros::NodeHandle nh_;
         GripperInterfaceClientHelper::Ptr gripper_;
         double default_closing_gripper_speed_;
+        double default_closing_gripper_force_;
         HRII::TrajectoryHelper::Ptr traj_helper_;
 
         std::string slider_displacement_service_name_;
@@ -42,17 +44,36 @@ class MoveSliderFSM
             ROS_INFO("Trajectory handler client initialized.");
 
             // Initialize gripper and close it
-            // gripper_ = std::make_shared<GripperInterfaceClientHelper>(req.robot_id+"trajectory_handler/execute_trajectory");
-            // if (!gripper_->init()) return false;
-            // // if (!gripper_->open(default_closing_gripper_speed_)) return false;
-            // ROS_INFO("Gripper client initialized.");
+            gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.robot_id+"/gripper");
+            if (!gripper_->init()) return false;
+            // if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            ROS_INFO("Gripper client initialized.");
             
             std::vector<geometry_msgs::Pose> waypoints;
             double execution_time = 5.0;
 
-            // Move to an approach pose upon the slider (w.r.t. the world frame)
-            ROS_INFO("MOVE SLIDER FSM STARTED! Approaching for the first time the slider");
-            geometry_msgs::Pose slider_pose, approach_pose;
+            ROS_INFO("MOVE SLIDER FSM STARTED!");
+            geometry_msgs::Pose slider_homing_pose, slider_pose, approach_pose;
+
+            // Move to slider homing pose to avoid joint limits
+            slider_homing_pose.position.x = 0.370;
+            slider_homing_pose.position.y = -0.162;
+            slider_homing_pose.position.z = 0.247;
+            slider_homing_pose.orientation.x = 1.000;
+            slider_homing_pose.orientation.y = 0.000;
+            slider_homing_pose.orientation.z = 0.000;
+            slider_homing_pose.orientation.w = 0.000;
+            waypoints.push_back(slider_homing_pose);
+
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {   
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the first approaching slider pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+            // Move to an approach pose upon the slider 
             slider_pose = req.slider_pose.pose;
             approach_pose = slider_pose;
             approach_pose.position.z += 0.02;
@@ -65,9 +86,11 @@ class MoveSliderFSM
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
+            waypoints.erase(waypoints.begin());
 
-            ros::Duration(3).sleep();
-            // Move to the slider pose (w.r.t. the world frame)
+            // ros::Duration(3).sleep();
+            // Move to the slider pose
+            slider_pose.position.z -= 0.002;
             waypoints.push_back(slider_pose);
             execution_time = 1.5;
 
@@ -82,7 +105,7 @@ class MoveSliderFSM
 
 
             // Closing the gripper
-            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
 
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(slider_displacement_service_name_) << " ROS service...");
             slider_displacement_client_.waitForExistence();
@@ -106,6 +129,11 @@ class MoveSliderFSM
             {
                 // Move the slider to the desired displacement
                 float displacement = desired_slider_displacement_srv.response.displacement;
+
+                if(displacement < -0.025){
+                    ROS_INFO_STREAM("Request displacement out of scale (" << displacement << ")! Manually set to -0.025.");
+                    displacement = -0.025;
+                }
                 ROS_INFO_STREAM("Displacement along slider y-axis: " << displacement);
 
                 Eigen::Vector3d displacement_vector(0, displacement, 0);
@@ -147,7 +175,21 @@ class MoveSliderFSM
                 }
             }
 
-            ros::Duration(3).sleep();
+            ROS_INFO("Move slide task accomplished, opening gripper.");
+            if (!gripper_->open(default_closing_gripper_speed_)) return false;
+
+            // Move to slider homing pose to avoid joint limits
+            waypoints.push_back(slider_homing_pose);
+
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {   
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the first approaching slider pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+            waypoints.erase(waypoints.begin());
+
             res.success = true;
             res.message = "";
             return true;

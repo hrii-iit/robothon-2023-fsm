@@ -445,7 +445,7 @@ class MainFSM
                 ROS_ERROR("Failure moving slider. Exiting.");
                 return false;
             }
-            ROS_INFO("SLIDE MOVED!.");
+            ROS_INFO("SLIDER MOVED!.");
 
             return true;
         }
