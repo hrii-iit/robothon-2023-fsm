@@ -88,7 +88,6 @@ class MoveSliderFSM
             }
             waypoints.erase(waypoints.begin());
 
-            // ros::Duration(3).sleep();
             // Move to the slider pose
             slider_pose.position.z -= 0.002;
             waypoints.push_back(slider_pose);
@@ -103,9 +102,9 @@ class MoveSliderFSM
             }
             waypoints.erase(waypoints.begin());
 
-
             // Closing the gripper
-            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
+            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
 
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(slider_displacement_service_name_) << " ROS service...");
             slider_displacement_client_.waitForExistence();
@@ -124,19 +123,26 @@ class MoveSliderFSM
             Eigen::Matrix3d displacement_transformation_rot_matrix = Q.toRotationMatrix();
             ROS_INFO_STREAM("Rotation matrix between franka_left_link0 and board slider: " << displacement_transformation_rot_matrix);
 
+            float abs_displacement = 0.0;
+
             // Loop until the task is not accomplished
             while(!desired_slider_displacement_srv.response.task_accomplished)
             {
                 // Move the slider to the desired displacement
-                float displacement = desired_slider_displacement_srv.response.displacement;
+                float relative_displacement = desired_slider_displacement_srv.response.displacement;
 
-                if(displacement < -0.025){
-                    ROS_INFO_STREAM("Request displacement out of scale (" << displacement << ")! Manually set to -0.025.");
-                    displacement = -0.025;
+                abs_displacement+=relative_displacement;
+
+                if(abs_displacement < 0.0){
+                    ROS_INFO_STREAM("Request displacement out of scale (" << abs_displacement << ")! Manually set to 0.0.");
+                    abs_displacement = 0.0;
+                }else if(abs_displacement > 0.025){
+                    ROS_INFO_STREAM("Request displacement out of scale (" << abs_displacement << ")! Manually set to 0.025.");
+                    abs_displacement = 0.025;
                 }
-                ROS_INFO_STREAM("Displacement along slider y-axis: " << displacement);
+                ROS_INFO_STREAM("Displacement along slider y-axis: " << abs_displacement);
 
-                Eigen::Vector3d displacement_vector(0, displacement, 0);
+                Eigen::Vector3d displacement_vector(0, -abs_displacement, 0);
                 //ROS_INFO_STREAM("Displacement along slider y-axis in Vector3:" << displacement_vector);
 
                 // Displacement vector in robot_base RF

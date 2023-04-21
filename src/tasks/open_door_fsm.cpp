@@ -53,8 +53,13 @@ class OpenDoorFSM
             std::vector<geometry_msgs::Pose> waypoints;
             double execution_time = 5.0;
 
+            // Store door handle pose and center of rotation pose
+            geometry_msgs::Pose door_handle_pose, center_of_rotation_pose;
+            door_handle_pose = req.door_handle_pose.pose;
+            center_of_rotation_pose = req.center_of_rotation_pose.pose;
+
             // Move to an approach pose w.r.t. the world frame
-            waypoints.push_back(req.door_handle_pose.pose);
+            waypoints.push_back(door_handle_pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
@@ -64,13 +69,13 @@ class OpenDoorFSM
                 return true;
             }
 
-            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
-            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
+            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
 
             // Plan trajectory
             Eigen::Affine3d w_T_door_handle, w_T_center_of_rotation;
-            tf::poseMsgToEigen(req.door_handle_pose.pose, w_T_door_handle);
-            tf::poseMsgToEigen(req.center_of_rotation_pose.pose, w_T_center_of_rotation);
+            tf::poseMsgToEigen(door_handle_pose, w_T_door_handle);
+            tf::poseMsgToEigen(center_of_rotation_pose, w_T_center_of_rotation);
 
             ROS_INFO_STREAM("w_T_door_handle:\t" << w_T_door_handle.translation().transpose());
             ROS_INFO_STREAM("w_T_center_of_rotation\t" << w_T_center_of_rotation.translation().transpose());
@@ -83,10 +88,10 @@ class OpenDoorFSM
 
             ros::Rate loop_rate(std::round(1.0/req.sampling_time));
 
-            while (ros::ok() && (time <= req.execution_time))
+            while (ros::ok() && (time <= T ))
             {
                 time += req.sampling_time;
-                double t_interp = 10 * pow(time/req.execution_time,3) - 15 * pow(time/req.execution_time,4) + 6 * pow(time/req.execution_time,5);
+                double t_interp = 10 * pow(time/T ,3) - 15 * pow(time/T ,4) + 6 * pow(time/T,5);
 
                 // Compute the new desired angle
                 double desired_angle = t_interp * req.final_desired_angle;
@@ -125,7 +130,7 @@ class OpenDoorFSM
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "dummy_fsm");
+    ros::init(argc, argv, "open_door_fsm");
     ros::NodeHandle nh("~");
 
     OpenDoorFSM fsm(nh);

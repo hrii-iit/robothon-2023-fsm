@@ -4,6 +4,7 @@
     <arg name="controller"  default="cart_hybrid_motion_force_controller"     doc="Which example controller should be started? (One of {cartesian_impedance,model,force,joint_position,joint_velocity}_example_controller)" />
     <arg name="controller_config_file" default="" doc="Controller config file .yaml" />
     <!-- <arg name="controller_desired_pose_topic" default="$(arg controller)/desired_tool_pose"/> -->
+    <arg name="control_node_config_file" value="$(find hrii_task_board_fsm)/config/controllers/franka_control_node.yaml"/>
 
     <arg name="launch_gripper" default="no_gripper" doc="Select the gripper you want 
         to apply to the robot flange from this list: https://gitlab.iit.it/hrii/robotics/common/hrii_robot_interface/-/blob/noetic-devel/hrii_gri_interface/urdf/all_grippers.urdf.xacro"/>
@@ -94,6 +95,8 @@
     
         <include file="$(find franka_control)/launch/franka_control.launch" pass_all_args="true">
             <arg name="load_gripper" value="false"/>
+            <arg name="robot_xacro" value="$(arg robot_urdf)" />
+            <arg name="control_node_config_file" value="$(arg control_node_config_file)"/>
         </include>
 
         <rosparam command="load" file="$(find franka_example_controllers)/config/franka_example_controllers.yaml" subst_value="true" />

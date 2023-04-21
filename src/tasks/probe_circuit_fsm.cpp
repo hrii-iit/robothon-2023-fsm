@@ -41,7 +41,7 @@ class ProbeCircuitFSM
         bool activationCallback(hrii_robothon_msgs::ProbeCircuit::Request& req,
                                 hrii_robothon_msgs::ProbeCircuit::Response& res)
         {
-            ROS_INFO_STREAM("Activate door opening for robot: " << req.robot_id);
+            ROS_INFO_STREAM("Activate circuit probing for robot: " << req.robot_id);
 
             controller_set_EE_T_task_frame_client_ = nh_.serviceClient<hrii_robot_msgs::SetPose>("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_);
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_) << " ROS service...");
@@ -89,8 +89,8 @@ class ProbeCircuitFSM
             }
 
             // Grasp the probe
-            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
-            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
+            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
 
             // Extract the probe
             Eigen::Affine3d robot_link0_T_probe_handle;
@@ -129,6 +129,11 @@ class ProbeCircuitFSM
                 return true;
             }
 
+            // Tmp stopping here
+            res.success = true;
+            res.message = "";
+            return true;
+            
             // Switch to task force in Z-axis
             geometry_msgs::WrenchStamped desired_wrench;
             desired_wrench.header.stamp = ros::Time::now();
