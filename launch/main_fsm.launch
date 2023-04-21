@@ -15,9 +15,9 @@
 
     <!-- Task board arguments -->
     <arg name="task_board_publish_manual_tf" default="$(arg sim)"/>
-    <arg name="task_board_init_pose_x" default="0.053"/>
-    <arg name="task_board_init_pose_y" default="-0.030"/>
-    <arg name="task_board_init_pose_z" default="0.010"/>
+    <arg name="task_board_init_pose_x" default="0.054"/>
+    <arg name="task_board_init_pose_y" default="-0.03"/>
+    <arg name="task_board_init_pose_z" default="0.01"/>
     <arg name="task_board_init_pose_roll" default="0.0"/>
     <arg name="task_board_init_pose_pitch" default="0.0"/>
     <arg name="task_board_init_pose_yaw" default="0.0"/>
@@ -150,6 +150,8 @@
         <node pkg="hrii_task_board_fsm" type="move_slider_fsm" name="move_slider_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="move_plug_fsm" name="move_plug_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="open_door_fsm" name="open_door_fsm" output="screen" respawn="false"/>
+        <node pkg="hrii_task_board_fsm" type="probe_circuit_fsm" name="probe_circuit_fsm" output="screen" respawn="false"/>
+        <node pkg="hrii_task_board_fsm" type="stow_probe_cable_fsm" name="stow_probe_cable_fsm" output="screen" respawn="false"/>
         
     </group>
 
