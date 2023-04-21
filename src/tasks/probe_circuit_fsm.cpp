@@ -77,9 +77,22 @@ class ProbeCircuitFSM
             if (!gripper_->open(default_closing_gripper_speed_)) return false;
             ROS_INFO("Gripper client initialized.");
             
-            double execution_time = 10.0;
+            double execution_time = 8.0;
+
+            // Move above the probe handle pose
+            geometry_msgs::Pose approach_probe_handle_pose;
+            approach_probe_handle_pose = req.probe_handle_pose.pose;
+            approach_probe_handle_pose.position.z += 0.10;
+            if(!traj_helper_->moveToTargetPoseAndWait(req.probe_handle_pose.pose, execution_time))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the approach the probe.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
 
             // Move to probe handle pose w.r.t. the world frame
+            execution_time = 10.0;
             if(!traj_helper_->moveToTargetPoseAndWait(req.probe_handle_pose.pose, execution_time))
             {
                 res.success = false;

@@ -50,7 +50,7 @@ class MoveSliderFSM
             ROS_INFO("Gripper client initialized.");
             
             std::vector<geometry_msgs::Pose> waypoints;
-            double execution_time = 5.0;
+            double execution_time = 4.0;
 
             ROS_INFO("MOVE SLIDER FSM STARTED!");
             geometry_msgs::Pose slider_homing_pose, slider_pose, approach_pose;
@@ -103,8 +103,8 @@ class MoveSliderFSM
             waypoints.erase(waypoints.begin());
 
             // Closing the gripper
-            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
-            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
+            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) return false;
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_closing_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
 
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(slider_displacement_service_name_) << " ROS service...");
             slider_displacement_client_.waitForExistence();
@@ -159,7 +159,7 @@ class MoveSliderFSM
 
                 // Move the robot to reference pose
                 waypoints.push_back(reference_pose);
-                execution_time = 5.0;
+                execution_time = 4.0;
 
                 if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
                 {
@@ -171,7 +171,7 @@ class MoveSliderFSM
                 waypoints.erase(waypoints.begin());
 
                 // Temporary sleep to wait for vision unit, maybe remove in the future
-                ros::Duration(3).sleep();
+                ros::Duration(0.5).sleep();
 
                 // Check if task is accomplished or get new displacement
                 if (!slider_displacement_client_.call(desired_slider_displacement_srv))

@@ -36,7 +36,6 @@ class OpenDoorFSM
             ROS_INFO_STREAM("Activate door opening for robot: " << req.robot_id);
 
             desired_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/"+req.robot_id+"/"+controller_desired_pose_topic_name_, 1);
-            // while (!(desired_pose_pub_.getNumSubscribers > 0));
 
             // Trajectory helper declaration and initialization
             traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.robot_id+"/trajectory_handler");
@@ -68,9 +67,10 @@ class OpenDoorFSM
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
+            waypoints.erase(waypoints.begin());
 
-            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
-            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
+            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
+            if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
 
             // Plan trajectory
             Eigen::Affine3d w_T_door_handle, w_T_center_of_rotation;
@@ -87,6 +87,9 @@ class OpenDoorFSM
             double T = req.execution_time;
 
             ros::Rate loop_rate(std::round(1.0/req.sampling_time));
+
+
+            geometry_msgs::PoseStamped w_T_desired_pose_msg;
 
             while (ros::ok() && (time <= T ))
             {
@@ -108,8 +111,12 @@ class OpenDoorFSM
 
                 Eigen::Affine3d w_T_desired_pose = w_T_center_of_rotation * center_of_rotation_T_desired_angle_pose * init_center_of_rotation_T_door_handle;
 
-                geometry_msgs::PoseStamped w_T_desired_pose_msg;
+
                 tf::poseEigenToMsg(w_T_desired_pose, w_T_desired_pose_msg.pose);
+
+                // Trying to keep orientation fixed to avoid joint limits
+                w_T_desired_pose_msg.pose.orientation = door_handle_pose.orientation;
+
                 w_T_desired_pose_msg.header.stamp = ros::Time::now();
                 w_T_desired_pose_msg.header.frame_id=req.robot_id+"_link0";
 
@@ -119,6 +126,19 @@ class OpenDoorFSM
             }
 
             if (!gripper_->open(default_closing_gripper_speed_)) return false;
+
+
+            // Move a bit above the last commanded pose
+            w_T_desired_pose_msg.pose.position.z += 0.1;
+            waypoints.push_back(w_T_desired_pose_msg.pose);
+
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the approach pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
 
             ROS_INFO("Door open.");
 

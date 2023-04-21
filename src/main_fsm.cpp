@@ -565,7 +565,8 @@ class MainFSM
             }
             
             // Fill service call
-            open_door_srv.request.execution_time = 5.0;
+            // open_door_srv.request.execution_time = 5.0;
+            open_door_srv.request.execution_time = 20.0;
             open_door_srv.request.final_desired_angle = 1.5707;
             open_door_srv.request.sampling_time = 0.001;
             open_door_srv.request.door_handle_pose.pose = geometry_msgs::toPose(door_handle_transform.transform);
