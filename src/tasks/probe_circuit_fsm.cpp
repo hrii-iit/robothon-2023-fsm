@@ -77,13 +77,16 @@ class ProbeCircuitFSM
             if (!gripper_->open(default_closing_gripper_speed_)) return false;
             ROS_INFO("Gripper client initialized.");
             
-            double execution_time = 8.0;
+            double execution_time = 5.0;
+
+            // Store probe handle pose
+            geometry_msgs::Pose approach_probe_handle_pose, probe_handle_pose;
+            probe_handle_pose = req.probe_handle_pose.pose;
+            approach_probe_handle_pose = probe_handle_pose;
 
             // Move above the probe handle pose
-            geometry_msgs::Pose approach_probe_handle_pose;
-            approach_probe_handle_pose = req.probe_handle_pose.pose;
-            approach_probe_handle_pose.position.z += 0.10;
-            if(!traj_helper_->moveToTargetPoseAndWait(req.probe_handle_pose.pose, execution_time))
+            approach_probe_handle_pose.position.z += 0.15;
+            if(!traj_helper_->moveToTargetPoseAndWait(approach_probe_handle_pose, execution_time))
             {
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the approach the probe.";
@@ -91,9 +94,9 @@ class ProbeCircuitFSM
                 return true;
             }
 
-            // Move to probe handle pose w.r.t. the world frame
-            execution_time = 10.0;
-            if(!traj_helper_->moveToTargetPoseAndWait(req.probe_handle_pose.pose, execution_time))
+            // Move to probe handle pose
+            execution_time = 4.0;
+            if(!traj_helper_->moveToTargetPoseAndWait(probe_handle_pose, execution_time))
             {
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the approach the probe.";
@@ -107,7 +110,7 @@ class ProbeCircuitFSM
 
             // Extract the probe
             Eigen::Affine3d robot_link0_T_probe_handle;
-            tf::poseMsgToEigen(req.probe_handle_pose.pose, robot_link0_T_probe_handle);
+            tf::poseMsgToEigen(probe_handle_pose, robot_link0_T_probe_handle);
 
             Eigen::Affine3d probe_handle_T_probe_extraction_pose = Eigen::Affine3d::Identity();
             probe_handle_T_probe_extraction_pose.translation() << 0, 0.0, -0.03;
@@ -172,8 +175,7 @@ class ProbeCircuitFSM
                 return true;
             }
 
-            // Set the new task frame to probe hole in gripper fingertips
-            // The task frame is rotated by 45° wrt EE orientation
+            // Task frame back to original one
             hrii_robot_msgs::SetPose original_EE_T_task_frame_srv;
             original_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 1.0; 
 

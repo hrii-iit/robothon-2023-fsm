@@ -43,14 +43,15 @@ class MoveSliderFSM
             traj_helper_->setTrackingPositionTolerance(0.2);
             ROS_INFO("Trajectory handler client initialized.");
 
-            // Initialize gripper and close it
+            // Initialize gripper and open it
             gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.robot_id+"/gripper");
             if (!gripper_->init()) return false;
-            if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            double opening_gri_speed = 1.0;
+            if (!gripper_->open(opening_gri_speed)) return false;
             ROS_INFO("Gripper client initialized.");
             
             std::vector<geometry_msgs::Pose> waypoints;
-            double execution_time = 4.0;
+            double execution_time = 3.0;
 
             ROS_INFO("MOVE SLIDER FSM STARTED!");
             geometry_msgs::Pose slider_homing_pose, slider_pose, approach_pose;
@@ -182,7 +183,8 @@ class MoveSliderFSM
             }
 
             ROS_INFO("Move slide task accomplished, opening gripper.");
-            if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            double opening_gripper_speed = 1.0;
+            if (!gripper_->open(opening_gripper_speed)) return false;
 
             // Move to slider homing pose to avoid joint limits
             waypoints.push_back(slider_homing_pose);

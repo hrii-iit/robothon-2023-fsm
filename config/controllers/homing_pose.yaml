@@ -1,8 +1,8 @@
 joint_pose:
-  $(arg arm_id)_joint1: -0.2618159711946521
-  $(arg arm_id)_joint2: -0.5498821419773116
-  $(arg arm_id)_joint3: -0.14452888073210127
-  $(arg arm_id)_joint4: -2.2713558698101606
-  $(arg arm_id)_joint5: -0.35993562998244627
-  $(arg arm_id)_joint6: 1.8238251493566775
-  $(arg arm_id)_joint7: 2.0598327494181534
+  $(arg arm_id)_joint1: -0.2617562643578395
+  $(arg arm_id)_joint2: -0.5480238741323066
+  $(arg arm_id)_joint3: -0.1450939965868554
+  $(arg arm_id)_joint4: -2.271357505262943
+  $(arg arm_id)_joint5: -0.36077278474731855
+  $(arg arm_id)_joint6: 1.8248598150044004
+  $(arg arm_id)_joint7: 2.05959501111673

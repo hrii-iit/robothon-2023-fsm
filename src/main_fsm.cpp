@@ -332,7 +332,9 @@ class MainFSM
 
             blue_button_pose.position.x = blueButtonTransform.transform.translation.x;
             blue_button_pose.position.y = blueButtonTransform.transform.translation.y;
-            blue_button_pose.position.z = blueButtonTransform.transform.translation.z;
+            // blue_button_pose.position.z = blueButtonTransform.transform.translation.z;
+            blue_button_pose.position.z = 0.095; // Set it manually to fix detection potential failure (not to break the board)
+
 
 
             ROS_INFO_STREAM("Blue button pose: " << blue_button_pose.position.x << ", " << blue_button_pose.position.y << ", " << blue_button_pose.position.z);
@@ -566,8 +568,11 @@ class MainFSM
             
             // Fill service call
             // open_door_srv.request.execution_time = 5.0;
-            open_door_srv.request.execution_time = 20.0;
-            open_door_srv.request.final_desired_angle = 1.5707;
+            open_door_srv.request.execution_time = 6.5;
+            // open_door_srv.request.final_desired_angle = 1.5707;
+            // open_door_srv.request.final_desired_angle = 1.6580; // 95 deg
+            // open_door_srv.request.final_desired_angle = 1.8326; // 105 deg
+            open_door_srv.request.final_desired_angle = 2.007; // 151 deg
             open_door_srv.request.sampling_time = 0.001;
             open_door_srv.request.door_handle_pose.pose = geometry_msgs::toPose(door_handle_transform.transform);
             open_door_srv.request.center_of_rotation_pose.pose = geometry_msgs::toPose(center_of_rotation_pose_transform.transform);
