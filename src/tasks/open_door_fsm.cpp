@@ -140,7 +140,8 @@ class OpenDoorFSM
             }
 
             // Opening gripper
-            if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            ROS_WARN_STREAM("This command (gripper opening) fails many times..");
+            if (!gripper_->open(default_closing_gripper_speed_)) ROS_WARN("Gripper: open failed...");
 
             // Move a bit above the last commanded pose
             w_T_desired_pose_msg.pose.position.z += 0.04;
@@ -158,7 +159,7 @@ class OpenDoorFSM
             // Compute and move to opened door pushing start
             Eigen::Affine3d door_handle_T_door_pushing_start;
             door_handle_T_door_pushing_start = Eigen::Affine3d::Identity();
-            door_handle_T_door_pushing_start.translation()[0] = 0.07;
+            door_handle_T_door_pushing_start.translation()[0] = 0.05;
             door_handle_T_door_pushing_start.translation()[2] = -0.095;
 
             Eigen::Affine3d w_T_door_pushing_start = w_T_door_handle * door_handle_T_door_pushing_start;
@@ -210,7 +211,7 @@ class OpenDoorFSM
             // Compute and move to opened door pushing end
             Eigen::Affine3d door_pushing_start_T_door_pushing_end;
             door_pushing_start_T_door_pushing_end = Eigen::Affine3d::Identity();
-            door_pushing_start_T_door_pushing_end.translation()[0] = 0.04;
+            door_pushing_start_T_door_pushing_end.translation()[0] = 0.06;
 
             Eigen::Affine3d w_T_door_pushing_end = w_T_door_pushing_start * door_pushing_start_T_door_pushing_end;
 

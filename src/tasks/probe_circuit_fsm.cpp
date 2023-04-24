@@ -104,6 +104,9 @@ class ProbeCircuitFSM
                 return true;
             }
 
+            ROS_INFO_STREAM("Probe handle pose transl:" << probe_handle_pose.position);
+            ROS_INFO_STREAM("Probe handle pose orient:\n" << probe_handle_pose.orientation);
+
             // Grasp the probe
             // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
             if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");

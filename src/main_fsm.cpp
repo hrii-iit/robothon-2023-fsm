@@ -570,9 +570,9 @@ class MainFSM
             // open_door_srv.request.execution_time = 5.0;
             open_door_srv.request.execution_time = 6.5;
             // open_door_srv.request.final_desired_angle = 1.5707;
-            // open_door_srv.request.final_desired_angle = 1.6580; // 95 deg
+            open_door_srv.request.final_desired_angle = 1.6580; // 95 deg
             // open_door_srv.request.final_desired_angle = 1.8326; // 105 deg
-            open_door_srv.request.final_desired_angle = 2.007; // 151 deg
+            // open_door_srv.request.final_desired_angle = 2.007; // 115 deg
             open_door_srv.request.sampling_time = 0.001;
             open_door_srv.request.door_handle_pose.pose = geometry_msgs::toPose(door_handle_transform.transform);
             open_door_srv.request.center_of_rotation_pose.pose = geometry_msgs::toPose(center_of_rotation_pose_transform.transform);
