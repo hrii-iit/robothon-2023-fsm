@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+
+<include file="$(find franka_example_controllers)/launch/move_to_start.launch" >
+  <arg name="start_pose" default="$(find hrii_task_board_fsm)/config/controllers/homing_pose.yaml" />
+  <arg name="robot_ip" default="192.168.0.102" />
+</include>
+
+</launch>

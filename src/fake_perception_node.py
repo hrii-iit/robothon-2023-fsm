@@ -8,20 +8,20 @@ from hrii_robothon_msgs.srv import BoardDetection,BoardDetectionResponse,Desired
 
 count = 1
 
+# Send relative fake slider displacement
 def slider_desired_displacement(req):
-    #Computation of the desired pose from perception section (ToDo)
     global count
     global task_accomplished
     if (count == 1):
-        desired_displacement = -0.013 # Absolute movement w.r.t. initial pose
+        desired_displacement = 0.013 # Absolute movement w.r.t. initial pose
         task_accomplished = False
         
     if (count == 2):
-        desired_displacement = -0.027 # Absolute movement w.r.t. initial pose - out of scale
+        desired_displacement = 0.012 # Absolute movement w.r.t. initial pose - out of scale
         task_accomplished = False
                 
     if (count == 3):
-        desired_displacement = -0.00 # Absolute movement w.r.t. initial pose
+        desired_displacement = -0.22 # Absolute movement w.r.t. initial pose
         task_accomplished = False
 
     if (count == 4):
