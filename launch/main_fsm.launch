@@ -150,6 +150,8 @@
         <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
             <param name="right_robot_id" value="$(arg right_robot_id)"/>
+            <param name="left_robot_launch" value="$(arg left_robot_launch)"/>
+            <param name="right_robot_launch" value="$(arg right_robot_launch)"/>
             <rosparam file="$(arg task_order_config_file)"/>
         </node>
 

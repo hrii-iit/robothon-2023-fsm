@@ -67,12 +67,36 @@ class MainFSM
             {
                 ROS_INFO_STREAM(cnt << ": " << task_order_[cnt]);
             }
+            if(!nh_priv_.getParam("left_robot_launch", left_robot_launch_))
+            {
+                ROS_ERROR_STREAM("No " << nh_priv_.resolveName("left_robot_launch") << " ROS param found");
+                return false;
+            }
+            if(!nh_priv_.getParam("right_robot_launch", right_robot_launch_))
+            {
+                ROS_ERROR_STREAM("No " << nh_priv_.resolveName("right_robot_launch") << " ROS param found");
+                return false;
+            }
+            
+            if(left_robot_launch_)
+            {
+                left_robot_controller_manager_status_service_name_ = "/" + left_robot_id_ + "/controller_manager/list_controllers";
+                if (!waitForRunningController(nh_, 
+                                            left_robot_controller_manager_status_service_name_,
+                                            "cart_hybrid_motion_force_controller")) return false;
+                ROS_INFO("Left robot controller running.");
+            }else
+                ROS_INFO("Left robot controller not activated.");
 
-            left_robot_controller_manager_status_service_name_ = "/" + left_robot_id_ + "/controller_manager/list_controllers";
-            if (!waitForRunningController(nh_, 
-                                          left_robot_controller_manager_status_service_name_,
-                                          "cart_hybrid_motion_force_controller")) return false;
-            ROS_INFO("Left robot controller running.");
+            if(right_robot_launch_)
+            {
+                right_robot_controller_manager_status_service_name_ = "/" + right_robot_id_ + "/controller_manager/list_controllers";
+                if (!waitForRunningController(nh_, 
+                                            right_robot_controller_manager_status_service_name_,
+                                            "cart_hybrid_motion_force_controller")) return false;
+                ROS_INFO("Right robot controller running.");
+            }else
+                ROS_INFO("Right robot controller not activated.");
             
             return true;
         }
@@ -194,6 +218,9 @@ class MainFSM
         
         std::string left_robot_controller_manager_status_service_name_;
         ros::ServiceClient left_robot_controller_manager_status_client_;
+        
+        std::string right_robot_controller_manager_status_service_name_;
+        ros::ServiceClient right_robot_controller_manager_status_client_;
 
         std::string homing_service_name_;
         ros::ServiceClient homing_client_;
@@ -224,6 +251,7 @@ class MainFSM
 
         // Robots attributs
         std::string left_robot_id_, right_robot_id_;
+        bool left_robot_launch_, right_robot_launch_;
 
         // FSM states declaration
         enum class States {HOMING, 
