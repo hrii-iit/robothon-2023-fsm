@@ -704,25 +704,25 @@ class MainFSM
                 ROS_ERROR_STREAM("Tranform btw " << stow_probe_cable_srv.request.cable_stower_robot_id <<"_link0 and task_board_left_wire_reel_link NOT found!");
                 return false;
             }
-            geometry_msgs::Pose left_wire_reel_probe_holder_robot_pose, left_wire_reel_cable_stower_pose;
-            left_wire_reel_probe_holder_pose.orientation = leftWireReelProbeHolderRobotTransform.transform.rotation;
-            left_wire_reel_probe_holder_pose.position.x = leftWireReelProbeHolderRobotTransform.transform.translation.x;
-            left_wire_reel_probe_holder_pose.position.y = leftWireReelProbeHolderRobotTransform.transform.translation.y;
-            left_wire_reel_probe_holder_pose.position.z = leftWireReelProbeHolderRobotTransform.transform.translation.z;
+            geometry_msgs::Pose left_wire_reel_probe_holder_robot_pose, left_wire_reel_cable_stower_robot_pose;
+            left_wire_reel_probe_holder_robot_pose.orientation = leftWireReelProbeHolderRobotTransform.transform.rotation;
+            left_wire_reel_probe_holder_robot_pose.position.x = leftWireReelProbeHolderRobotTransform.transform.translation.x;
+            left_wire_reel_probe_holder_robot_pose.position.y = leftWireReelProbeHolderRobotTransform.transform.translation.y;
+            left_wire_reel_probe_holder_robot_pose.position.z = leftWireReelProbeHolderRobotTransform.transform.translation.z;
 
-            left_wire_reel_cable_stower_pose.orientation = leftWireReeCableStowerRobotTransform.transform.rotation;
-            left_wire_reel_cable_stower_pose.position.x = leftWireReeCableStowerRobotTransform.transform.translation.x;
-            left_wire_reel_cable_stower_pose.position.y = leftWireReeCableStowerRobotTransform.transform.translation.y;
-            left_wire_reel_cable_stower_pose.position.z = leftWireReeCableStowerRobotTransform.transform.translation.z;
+            left_wire_reel_cable_stower_robot_pose.orientation = leftWireReeCableStowerRobotTransform.transform.rotation;
+            left_wire_reel_cable_stower_robot_pose.position.x = leftWireReeCableStowerRobotTransform.transform.translation.x;
+            left_wire_reel_cable_stower_robot_pose.position.y = leftWireReeCableStowerRobotTransform.transform.translation.y;
+            left_wire_reel_cable_stower_robot_pose.position.z = leftWireReeCableStowerRobotTransform.transform.translation.z;
 
-            ROS_INFO_STREAM("Left wire reel (probe holder) pose: " << left_wire_reel_probe_holder_pose.position.x << ", " << left_wire_reel_probe_holder_pose.position.y << ", " << left_wire_reel_probe_holder_pose.position.z);
-            ROS_INFO_STREAM("Left wire reel (probe holder) orientation: " << left_wire_reel_probe_holder_pose.orientation.x << ", " << left_wire_reel_probe_holder_pose.orientation.y << ", " << left_wire_reel_probe_holder_pose.orientation.z << ", " << left_wire_reel_probe_holder_pose.orientation.w);
+            ROS_INFO_STREAM("Left wire reel (probe holder) pose: " << left_wire_reel_probe_holder_robot_pose.position.x << ", " << left_wire_reel_probe_holder_robot_pose.position.y << ", " << left_wire_reel_probe_holder_robot_pose.position.z);
+            ROS_INFO_STREAM("Left wire reel (probe holder) orientation: " << left_wire_reel_probe_holder_robot_pose.orientation.x << ", " << left_wire_reel_probe_holder_robot_pose.orientation.y << ", " << left_wire_reel_probe_holder_robot_pose.orientation.z << ", " << left_wire_reel_probe_holder_robot_pose.orientation.w);
 
-            ROS_INFO_STREAM("Left wire reel (cable stower) pose: " << left_wire_reel_cable_stower_pose.position.x << ", " << left_wire_reel_cable_stower_pose.position.y << ", " << left_wire_reel_cable_stower_pose.position.z);
-            ROS_INFO_STREAM("Left wire reel (cable stower) orientation: " << left_wire_reel_cable_stower_pose.orientation.x << ", " << left_wire_reel_cable_stower_pose.orientation.y << ", " << left_wire_reel_cable_stower_pose.orientation.z << ", " << left_wire_reel_cable_stower_pose.orientation.w);
+            ROS_INFO_STREAM("Left wire reel (cable stower) pose: " << left_wire_reel_cable_stower_robot_pose.position.x << ", " << left_wire_reel_cable_stower_robot_pose.position.y << ", " << left_wire_reel_cable_stower_robot_pose.position.z);
+            ROS_INFO_STREAM("Left wire reel (cable stower) orientation: " << left_wire_reel_cable_stower_robot_pose.orientation.x << ", " << left_wire_reel_cable_stower_robot_pose.orientation.y << ", " << left_wire_reel_cable_stower_robot_pose.orientation.z << ", " << left_wire_reel_cable_stower_robot_pose.orientation.w);
 
-            stow_probe_cable_srv.request.left_wire_reel_probe_holder_pose.pose = left_wire_reel_probe_holder_pose;
-            stow_probe_cable_srv.request.left_wire_reel_cable_stower_pose.pose = left_wire_reel_cable_stower_pose;
+            stow_probe_cable_srv.request.left_wire_reel_probe_holder_robot_pose.pose = left_wire_reel_probe_holder_robot_pose;
+            stow_probe_cable_srv.request.left_wire_reel_cable_stower_robot_pose.pose = left_wire_reel_cable_stower_robot_pose;
 
             if (!stow_probe_cable_activation_client_.call(stow_probe_cable_srv))
             {
