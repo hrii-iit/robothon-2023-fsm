@@ -340,14 +340,13 @@ class MainFSM
             // Real button pose
             geometry_msgs::TransformStamped blueButtonTransform;
             try{
-                blueButtonTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_blue_button_link", ros::Time(0), ros::Duration(3));
-                ROS_INFO("Tranform btw franka_left_link0 and task_board_blue_button_link found!");
+                blueButtonTransform = tf_buffer_.lookupTransform(press_button_srv.request.robot_id+"_link0", "task_board_blue_button_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << press_button_srv.request.robot_id << "_link0 and task_board_blue_button_link found!");
             }
-            catch (tf2::TransformException &ex) {
+            catch (tf2::TransformException &ex) 
+            {
                 ROS_WARN("%s",ex.what());
-                ros::Duration(1.0).sleep();
-                ROS_ERROR("Tranform btw franka_left_link0 and task_board_blue_button_link NOT found!");
-                return false;
+                ROS_ERROR_STREAM("Tranform btw " << press_button_srv.request.robot_id <<"_link0 and task_board_blue_button_link NOT found!");
             }
             geometry_msgs::Pose blue_button_pose;
             // blue_button_pose.orientation = blueButtonTransform.transform.rotation;
@@ -397,14 +396,13 @@ class MainFSM
             // Real button pose
             geometry_msgs::TransformStamped redButtonTransform;
             try{
-                redButtonTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0), ros::Duration(3));
-                ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
+                redButtonTransform = tf_buffer_.lookupTransform(press_button_srv.request.robot_id+"_link0", "task_board_red_button_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << press_button_srv.request.robot_id << "_link0 and task_board_red_button_link found!");
             }
-            catch (tf2::TransformException &ex) {
+            catch (tf2::TransformException &ex) 
+            {
                 ROS_WARN("%s",ex.what());
-                ros::Duration(1.0).sleep();
-                ROS_ERROR("Tranform btw franka_left_link0 and task_board_red_button_link NOT found!");
-                return false;
+                ROS_ERROR_STREAM("Tranform btw " << press_button_srv.request.robot_id <<"_link0 and task_board_red_button_link NOT found!");
             }
             geometry_msgs::Pose red_button_pose;
             // red_button_pose.orientation = redButtonTransform.transform.rotation;
@@ -449,14 +447,13 @@ class MainFSM
             // Real slider pose
             geometry_msgs::TransformStamped sliderTransform;
             try{
-                sliderTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_starting_slider_link", ros::Time(0), ros::Duration(3));
-                ROS_INFO("Tranform btw franka_left_link0 and task_board_starting_slider_link found!");
+                sliderTransform = tf_buffer_.lookupTransform(move_slider_srv.request.robot_id+"_link0", "task_board_starting_slider_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << move_slider_srv.request.robot_id << "_link0 and task_board_starting_slider_link found!");
             }
-            catch (tf2::TransformException &ex) {
+            catch (tf2::TransformException &ex) 
+            {
                 ROS_WARN("%s",ex.what());
-                ros::Duration(1.0).sleep();
-                ROS_ERROR("Tranform btw franka_left_link0 and task_board_starting_slider_link NOT found!");
-                return false;
+                ROS_ERROR_STREAM("Tranform btw " << move_slider_srv.request.robot_id <<"_link0 and task_board_starting_slider_link NOT found!");
             }
             geometry_msgs::Pose slider_pose;
             slider_pose.orientation = sliderTransform.transform.rotation;
@@ -495,14 +492,13 @@ class MainFSM
             // Real black hole pose
             geometry_msgs::TransformStamped startingConnectorHoleTransform;
             try{
-                startingConnectorHoleTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_starting_connector_hole_link", ros::Time(0), ros::Duration(3));
-                ROS_INFO("Tranform btw franka_left_link0 and task_board_starting_connector_hole_link found!");
+                startingConnectorHoleTransform = tf_buffer_.lookupTransform(move_plug_srv.request.robot_id+"_link0", "task_board_starting_connector_hole_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << move_plug_srv.request.robot_id << "_link0 and task_board_starting_connector_hole_link found!");
             }
-            catch (tf2::TransformException &ex) {
+            catch (tf2::TransformException &ex) 
+            {
                 ROS_WARN("%s",ex.what());
-                ros::Duration(1.0).sleep();
-                ROS_ERROR("Tranform btw franka_left_link0 and task_board_starting_connector_hole_link NOT found!");
-                return false;
+                ROS_ERROR_STREAM("Tranform btw " << move_plug_srv.request.robot_id <<"_link0 and task_board_starting_connector_hole_link NOT found!");
             }
             geometry_msgs::Pose starting_connector_hole_pose;
             starting_connector_hole_pose.orientation = startingConnectorHoleTransform.transform.rotation;
@@ -521,14 +517,13 @@ class MainFSM
             // Real black hole pose
             geometry_msgs::TransformStamped endingConnectorHoleTransform;
             try{
-                endingConnectorHoleTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_ending_connector_hole_link", ros::Time(0), ros::Duration(3));
-                ROS_INFO("Tranform btw franka_left_link0 and task_board_ending_connector_hole_link found!");
+                endingConnectorHoleTransform = tf_buffer_.lookupTransform(move_plug_srv.request.robot_id+"_link0", "task_board_ending_connector_hole_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << move_plug_srv.request.robot_id << "_link0 and task_board_ending_connector_hole_link found!");
             }
-            catch (tf2::TransformException &ex) {
+            catch (tf2::TransformException &ex) 
+            {
                 ROS_WARN("%s",ex.what());
-                ros::Duration(1.0).sleep();
-                ROS_ERROR("Tranform btw franka_left_link0 and task_board_ending_connector_hole_link NOT found!");
-                return false;
+                ROS_ERROR_STREAM("Tranform btw " << move_plug_srv.request.robot_id <<"_link0 and task_board_ending_connector_hole_link NOT found!");
             }
             geometry_msgs::Pose ending_connector_hole_pose;
             ending_connector_hole_pose.orientation = endingConnectorHoleTransform.transform.rotation;
@@ -669,7 +664,7 @@ class MainFSM
                 ROS_ERROR("Failure pressing button. Exiting.");
                 return false;
             }
-            ROS_INFO("Circuit probed pressed.");
+            ROS_INFO("Circuit probed.");
 
             return true;
         }
@@ -681,43 +676,65 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(stow_probe_cable_activation_service_name_) << " ROS service...");
             stow_probe_cable_activation_client_.waitForExistence();
 
-            // hrii_robothon_msgs::StowProbeCable stow_probe_cable_srv;
-            // stow_probe_cable_srv.request.robot_id = left_robot_id_;
+            hrii_robothon_msgs::StowProbeCable stow_probe_cable_srv;
+            stow_probe_cable_srv.request.robot_id = left_robot_id_;
 
-            // // Real button pose
-            // geometry_msgs::TransformStamped redButtonTransform;
-            // try{
-            //     redButtonTransform = tf_buffer_.lookupTransform("franka_left_link0", "task_board_red_button_link", ros::Time(0), ros::Duration(3));
-            //     ROS_INFO("Tranform btw franka_left_link0 and task_board_red_button_link found!");
-            // }
-            // catch (tf2::TransformException &ex) {
-            //     ROS_WARN("%s",ex.what());
-            //     ros::Duration(1.0).sleep();
-            //     ROS_ERROR("Tranform btw franka_left_link0 and task_board_red_button_link NOT found!");
-            //     return false;
-            // }
-            // geometry_msgs::Pose red_button_pose;
-            // red_button_pose.orientation = redButtonTransform.transform.rotation;
-            // red_button_pose.position.x = redButtonTransform.transform.translation.x;
-            // red_button_pose.position.y = redButtonTransform.transform.translation.y;
-            // red_button_pose.position.z = redButtonTransform.transform.translation.z;
+            // Get left and right wire reel poses
+            geometry_msgs::TransformStamped leftWireReelTransform, rightWireReelTransform;
+            try
+            {
+                leftWireReelTransform = tf_buffer_.lookupTransform(stow_probe_cable_srv.request.robot_id+"_link0", "task_board_left_wire_reel_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << stow_probe_cable_srv.request.robot_id << "_link0 and task_board_left_wire_reel_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw " << stow_probe_cable_srv.request.robot_id <<"_link0 and task_board_left_wire_reel_link NOT found!");
+                return false;
+            }
+            // Maybe not needed
+            try
+            {
+                rightWireReelTransform = tf_buffer_.lookupTransform(stow_probe_cable_srv.request.robot_id+"_link0", "task_board_right_wire_reel_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << stow_probe_cable_srv.request.robot_id << "_link0 and task_board_right_wire_reel_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw " << stow_probe_cable_srv.request.robot_id <<"_link0 and task_board_right_wire_reel_link NOT found!");
+                return false;
+            }
+            geometry_msgs::Pose left_wire_reel_pose, right_wire_reel_pose;
+            left_wire_reel_pose.orientation = leftWireReelTransform.transform.rotation;
+            left_wire_reel_pose.position.x = leftWireReelTransform.transform.translation.x;
+            left_wire_reel_pose.position.y = leftWireReelTransform.transform.translation.y;
+            left_wire_reel_pose.position.z = leftWireReelTransform.transform.translation.z;
 
-            // ROS_INFO_STREAM("Red button pose: " << red_button_pose.position.x << ", " << red_button_pose.position.y << ", " << red_button_pose.position.z);
-            // ROS_INFO_STREAM("Red button orientation: " << red_button_pose.orientation.x << ", " << red_button_pose.orientation.y << ", " << red_button_pose.orientation.z << ", " << red_button_pose.orientation.w);
+            right_wire_reel_pose.orientation = rightWireReelTransform.transform.rotation;
+            right_wire_reel_pose.position.x = rightWireReelTransform.transform.translation.x;
+            right_wire_reel_pose.position.y = rightWireReelTransform.transform.translation.y;
+            right_wire_reel_pose.position.z = rightWireReelTransform.transform.translation.z;
 
-            // press_button_srv.request.button_pose.pose = red_button_pose;
+            ROS_INFO_STREAM("Left wire reel pose: " << left_wire_reel_pose.position.x << ", " << left_wire_reel_pose.position.y << ", " << left_wire_reel_pose.position.z);
+            ROS_INFO_STREAM("Left wire reel orientation: " << left_wire_reel_pose.orientation.x << ", " << left_wire_reel_pose.orientation.y << ", " << left_wire_reel_pose.orientation.z << ", " << left_wire_reel_pose.orientation.w);
 
-            // if (!press_button_activation_client_.call(press_button_srv))
-            // {
-            //     ROS_ERROR("Error calling press button activation service.");
-            //     return false;
-            // }
-            // else if (!press_button_srv.response.success)
-            // {
-            //     ROS_ERROR("Failure pressing button. Exiting.");
-            //     return false;
-            // }
-            // ROS_INFO("Button pressed.");
+            ROS_INFO_STREAM("Right wire reel pose: " << right_wire_reel_pose.position.x << ", " << right_wire_reel_pose.position.y << ", " << right_wire_reel_pose.position.z);
+            ROS_INFO_STREAM("Right wire reel orientation: " << right_wire_reel_pose.orientation.x << ", " << right_wire_reel_pose.orientation.y << ", " << right_wire_reel_pose.orientation.z << ", " << right_wire_reel_pose.orientation.w);
+
+            stow_probe_cable_srv.request.left_wire_reel_pose.pose = left_wire_reel_pose;
+            stow_probe_cable_srv.request.right_wire_reel_pose.pose = right_wire_reel_pose;
+
+            if (!stow_probe_cable_activation_client_.call(stow_probe_cable_srv))
+            {
+                ROS_ERROR("Error calling stow probe cable activation service.");
+                return false;
+            }
+            else if (!stow_probe_cable_srv.response.success)
+            {
+                ROS_ERROR("Failure stowing probe cable. Exiting.");
+                return false;
+            }
+            ROS_INFO("Probe cable stowed.");
             return true;
         }
 
