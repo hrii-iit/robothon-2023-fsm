@@ -120,6 +120,15 @@ class MainFSM
                         state_ = MainFSM::States::ERROR;
                     break;
                 }
+
+                case MainFSM::States::OTHER_HOMING:
+                {
+                    // Move to other pose and wait for start
+                    ROS_INFO("- - - OTHER HOMING STATE - - -");
+                    if (!otherHoming())
+                        state_ = MainFSM::States::ERROR;
+                    break;
+                }
                     
                 case MainFSM::States::BOARD_DETECTION:
                 {
@@ -255,6 +264,7 @@ class MainFSM
 
         // FSM states declaration
         enum class States {HOMING, 
+                            OTHER_HOMING, 
                             PRESS_RED_BUTTON, 
                             BOARD_DETECTION,
                             MOVE_SLIDER,
@@ -267,7 +277,7 @@ class MainFSM
                             ERROR} state_;
 
         // Homing pose
-        geometry_msgs::Pose homing_pose;
+        geometry_msgs::Pose homing_pose, other_homing_pose;
 
         bool homing()
         {
@@ -301,6 +311,41 @@ class MainFSM
                 return false;
             }
             ROS_INFO("Homing succeded.");
+            return true;
+        }
+
+        bool otherHoming()
+        {
+            ROS_INFO("Go to other home position...");
+
+            // Wait for task services activation
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
+            homing_client_.waitForExistence();
+
+            // Define homing pose
+            other_homing_pose.position.x = 0.113;
+            other_homing_pose.position.y = -0.284;
+            other_homing_pose.position.z = 0.488;
+            other_homing_pose.orientation.x = 1.000;
+            other_homing_pose.orientation.y = 0.000;
+            other_homing_pose.orientation.z = 0.000;
+            other_homing_pose.orientation.w = 0.000;
+
+            hrii_robothon_msgs::Homing other_homing_srv;
+            other_homing_srv.request.robot_id = right_robot_id_;
+            other_homing_srv.request.home_pose.pose = other_homing_pose;
+
+            if (!homing_client_.call(other_homing_srv))
+            {
+                ROS_ERROR("Error calling homing service.");
+                return false;
+            }
+            else if (!other_homing_srv.response.success)
+            {
+                ROS_ERROR("Failure going home. Exiting.");
+                return false;
+            }
+            ROS_INFO("Other homing succeded.");
             return true;
         }
 
@@ -761,6 +806,7 @@ class MainFSM
         States resolveStateString(const std::string& state_str)
         {
             if (state_str.compare("homing") == 0 || state_str.compare("HOMING") == 0) return States::HOMING;
+            if (state_str.compare("other_homing") == 0 || state_str.compare("OTHER_HOMING") == 0) return States::OTHER_HOMING;
             if (state_str.compare("board_detection") == 0 || state_str.compare("BOARD_DETECTION") == 0) return States::BOARD_DETECTION;
             if (state_str.compare("press_red_button") == 0 || state_str.compare("PRESS_RED_BUTTON") == 0) return States::PRESS_RED_BUTTON;
             if (state_str.compare("move_slider") == 0 || state_str.compare("MOVE_SLIDER") == 0) return States::MOVE_SLIDER;

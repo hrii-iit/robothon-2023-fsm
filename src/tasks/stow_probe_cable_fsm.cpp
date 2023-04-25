@@ -21,11 +21,11 @@ class StowProbeCableFSM
     
     private:
         ros::NodeHandle nh_;
-        GripperInterfaceClientHelper::Ptr probe_holder_robot_gripper_;
+        GripperInterfaceClientHelper::Ptr probe_holder_robot_gripper_, cable_stower_robot_gripper_;
         double default_closing_gripper_speed_;
         double default_grasping_gripper_force_;
 
-        HRII::TrajectoryHelper::Ptr probe_holder_robot_traj_helper_;
+        HRII::TrajectoryHelper::Ptr probe_holder_robot_traj_helper_, cable_stower_robot_traj_helper_;
 
         ros::ServiceServer activation_server_;
 
@@ -64,17 +64,27 @@ class StowProbeCableFSM
                 return false;
             }
 
-            // Trajectory helper declaration and initialization
+            // Trajectory helpers declaration and initialization
             probe_holder_robot_traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.probe_holder_robot_id+"/trajectory_handler");
             if (!probe_holder_robot_traj_helper_->init()) return false;
             probe_holder_robot_traj_helper_->setTrackingPositionTolerance(0.2);
             ROS_INFO("Trajectory handler client initialized (Probe holder robot).");
 
-            // Initialize gripper
+            cable_stower_robot_traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.cable_stower_robot_id+"/trajectory_handler");
+            if (!cable_stower_robot_traj_helper_->init()) return false;
+            cable_stower_robot_traj_helper_->setTrackingPositionTolerance(0.2);
+            ROS_INFO("Trajectory handler client initialized (Cable stower robot).");
+
+            // Initialize grippers
             probe_holder_robot_gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.probe_holder_robot_id+"/gripper");
             if (!probe_holder_robot_gripper_->init()) return false;
-            // if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            // if (!probe_holder_robot_gripper_->open(default_closing_gripper_speed_)) return false;
             ROS_INFO("Gripper client initialized (Probe holder robot).");
+
+            cable_stower_robot_gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.cable_stower_robot_id+"/gripper");
+            if (!cable_stower_robot_gripper_->init()) return false;
+            // if (!cable_stower_robot_gripper_->open(default_closing_gripper_speed_)) return false;
+            ROS_INFO("Gripper client initialized (Cable stower robot).");
             
             double execution_time = 20.0;
 
@@ -90,10 +100,7 @@ class StowProbeCableFSM
 
             // Perform a rotation of 90 deg around y axis
             ending_connector_hole_T_probe_tension.rotate(Eigen::AngleAxisd(M_PI/2, Eigen::Vector3d(0,1,0)));
-
-
             ROS_INFO_STREAM("ending_connector_hole_T_probe_tension:\n" << ending_connector_hole_T_probe_tension.matrix());
-
 
             // ending_connector_hole_T_probe_tension. ()[2] = -0.50;
 
@@ -104,7 +111,7 @@ class StowProbeCableFSM
             geometry_msgs::PoseStamped w_T_door_pushing_start_msg;
             tf::poseEigenToMsg(w_T_probe_tension, w_T_probe_tension_msg);
 
-            // Move above the probe handle pose
+            // Probe holder: move above the probe handle pose
             if(!probe_holder_robot_traj_helper_->moveToTargetPoseAndWait(w_T_probe_tension_msg, execution_time))
             {
                 res.success = false;
@@ -113,8 +120,27 @@ class StowProbeCableFSM
                 return true;
             }
 
-           
+            // Compute grasp cable pose (for cable stower)
+            geometry_msgs::Pose w_T_grasp_cable_msg;
 
+            // TODO restart from here
+
+
+            // Cable stower: move to grasp cable
+            // if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(w_T_grasp_cable_msg, execution_time))
+            // {
+            //     res.success = false;
+            //     res.message = req.cable_stower_robot_id+" failed to move to grasp cable pose.";
+            //     ROS_ERROR_STREAM(res.message);
+            //     return true;
+            // }
+
+            // Cable stower: grasp the cable
+            // if (!probe_holder_robot_gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
+            if (!cable_stower_robot_gripper_->close(default_closing_gripper_speed_)) ROS_WARN("Gripper: close failed...");
+
+           
+            // TODO: perform stowing
 
 
 
