@@ -1,5 +1,6 @@
 #include <ros/ros.h>
-#include "hrii_robothon_msgs/OpenDoor.h"
+#include "hrii_robothon_msgs/StowProbeCable.h"
+#include "hrii_robot_msgs/SetPose.h"
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
 #include <eigen_conversions/eigen_msg.h>
@@ -19,58 +20,62 @@ class StowProbeCableFSM
     
     private:
         ros::NodeHandle nh_;
-        GripperInterfaceClientHelper::Ptr gripper_;
+        GripperInterfaceClientHelper::Ptr probe_holder_robot_gripper_;
         double default_closing_gripper_speed_;
         double default_grasping_gripper_force_;
 
-        HRII::TrajectoryHelper::Ptr traj_helper_;
+        HRII::TrajectoryHelper::Ptr probe_holder_robot_traj_helper_;
 
         ros::ServiceServer activation_server_;
+
+        ros::ServiceClient controller_set_EE_T_task_frame_client_;
+        std::string controller_set_EE_T_task_frame_service_name_;
 
         ros::Publisher desired_pose_pub_;
         std::string controller_desired_pose_topic_name_;
 
-        bool activationCallback(hrii_robothon_msgs::OpenDoor::Request& req,
-                                hrii_robothon_msgs::OpenDoor::Response& res)
+        bool activationCallback(hrii_robothon_msgs::StowProbeCable::Request& req,
+                                hrii_robothon_msgs::StowProbeCable::Response& res)
         {
 
-            ROS_INFO_STREAM("Activate probe cable stowing for robot: " << req.robot_id);
+            ROS_INFO_STREAM("Activate probe cable stowing. Probe holder: " << req.probe_holder_robot_id << " - Cable stower: " << req.cable_stower_robot_id);
 
-            // controller_set_EE_T_task_frame_client_ = nh_.serviceClient<hrii_robot_msgs::SetPose>("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_);
-            // ROS_INFO_STREAM("Waiting for " << nh_.resolveName("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_) << " ROS service...");
-            // controller_set_EE_T_task_frame_client_.waitForExistence();
+            // Change task frame of Probe holder robot
+            controller_set_EE_T_task_frame_client_ = nh_.serviceClient<hrii_robot_msgs::SetPose>("/"+req.probe_holder_robot_id+"/"+controller_set_EE_T_task_frame_service_name_);
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName("/"+req.probe_holder_robot_id+"/"+controller_set_EE_T_task_frame_service_name_) << " ROS service...");
+            controller_set_EE_T_task_frame_client_.waitForExistence();
 
-            // // Set the new task frame to probe hole in gripper fingertips
-            // // The task frame is rotated by 45° wrt EE orientation
-            // hrii_robot_msgs::SetPose set_EE_T_task_frame_srv;
-            // set_EE_T_task_frame_srv.request.pose_stamped.pose.position.z = -0.01;
-            // set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.y = -0.3826834; 
-            // set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = -0.9238795; 
+            // Set the new task frame to probe hole in gripper fingertips
+            // The task frame is rotated by 45° wrt EE orientation
+            hrii_robot_msgs::SetPose set_EE_T_task_frame_srv;
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.position.z = -0.01;
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.y = -0.3826834; 
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = -0.9238795; 
 
-            // if (!controller_set_EE_T_task_frame_client_.call(set_EE_T_task_frame_srv))
-            // {
-            //     ROS_ERROR("Error calling set_EE_T_task_frame ROS service.");
-            //     return false;
-            // }
-            // else if (!set_EE_T_task_frame_srv.response.success)
-            // {
-            //     ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
-            //     return false;
-            // }
+            if (!controller_set_EE_T_task_frame_client_.call(set_EE_T_task_frame_srv))
+            {
+                ROS_ERROR("Error calling set_EE_T_task_frame ROS service.");
+                return false;
+            }
+            else if (!set_EE_T_task_frame_srv.response.success)
+            {
+                ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
+                return false;
+            }
 
-            // // Trajectory helper declaration and initialization
-            // traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.robot_id+"/trajectory_handler");
-            // if (!traj_helper_->init()) return false;
-            // traj_helper_->setTrackingPositionTolerance(0.2);
-            // ROS_INFO("Trajectory handler client initialized.");
+            // Trajectory helper declaration and initialization
+            probe_holder_robot_traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.probe_holder_robot_id+"/trajectory_handler");
+            if (!probe_holder_robot_traj_helper_->init()) return false;
+            probe_holder_robot_traj_helper_->setTrackingPositionTolerance(0.2);
+            ROS_INFO("Trajectory handler client initialized (Probe holder robot).");
 
-            // // Initialize gripper and open it
-            // gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.robot_id+"/gripper");
-            // if (!gripper_->init()) return false;
+            // Initialize gripper
+            probe_holder_robot_gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.probe_holder_robot_id+"/gripper");
+            if (!probe_holder_robot_gripper_->init()) return false;
             // if (!gripper_->open(default_closing_gripper_speed_)) return false;
-            // ROS_INFO("Gripper client initialized.");
+            ROS_INFO("Gripper client initialized (Probe holder robot).");
             
-            // double execution_time = 5.0;
+            double execution_time = 20.0;
 
             // // Store probe handle pose
             // geometry_msgs::Pose approach_probe_handle_pose, probe_handle_pose;
@@ -186,7 +191,7 @@ class StowProbeCableFSM
             //     return false;
             // }
 
-            // ROS_INFO("Probe cable stowed.");
+            ROS_INFO("Probe cable stowed.");
 
             res.success = true;
             res.message = "";
