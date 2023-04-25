@@ -4,7 +4,7 @@ import numpy
 from std_msgs.msg import Float32
 import tf2_ros
 import geometry_msgs.msg
-from hrii_robothon_msgs.srv import BoardDetection,BoardDetectionResponse,DesiredSliderDisplacement,DesiredSliderDisplacementResponse
+from hrii_robothon_msgs.srv import BoardLocalization,BoardLocalizationResponse,DesiredSliderDisplacement,DesiredSliderDisplacementResponse
 
 count = 1
 
@@ -65,12 +65,12 @@ def board_detection(req):
     br.sendTransform(w_T_bl)
 
     success = True
-    return BoardDetectionResponse(success)
+    return BoardLocalizationResponse(success)
     
 
 if __name__ == "__main__":
     rospy.init_node('fake_percpetion_server')
-    slider_srv = rospy.Service('slider_desired_pose', DesiredSliderDisplacement, slider_desired_displacement)
-    board_detection_srv = rospy.Service('/fsm/board_detection', BoardDetection, board_detection)
+    slider_srv = rospy.Service('/robothon/slider_desired_pose', DesiredSliderDisplacement, slider_desired_displacement)
+    board_detection_srv = rospy.Service('/robothon/board_detection', BoardLocalization, board_detection)
     print("Fake perception node initialized.")
     rospy.spin()

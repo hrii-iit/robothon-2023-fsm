@@ -28,13 +28,6 @@ class HomingFSM
         {
             ROS_INFO_STREAM("Activate homing for robot: " << req.robot_id);
 
-            //Wait until the controller_started param is found
-            // ROS_WARN("Waiting for controller to start...");
-            // do{
-            //     ros::Duration(0.5).sleep();
-            // }while(!HRII_Utils::getParamSuccess(req.robot_id+"controller_started"));
-            // ROS_INFO("Controller started.");
-
             // Trajectory helper declaration and initialization
             traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.robot_id+"/trajectory_handler");
             if (!traj_helper_->init()) return false;

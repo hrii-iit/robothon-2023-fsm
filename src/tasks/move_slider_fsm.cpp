@@ -15,7 +15,7 @@ class MoveSliderFSM
             activation_server_ = nh_.advertiseService("activate", &MoveSliderFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
 
-            slider_displacement_service_name_ = "/slider_desired_pose";
+            slider_displacement_service_name_ = "/robothon/slider_desired_pose";
             slider_displacement_client_ = nh_.serviceClient<hrii_robothon_msgs::DesiredSliderDisplacement>(slider_displacement_service_name_);
         }
     

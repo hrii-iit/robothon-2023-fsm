@@ -23,8 +23,8 @@ class MainFSM
             homing_service_name_ = "homing_fsm/activate";
             homing_client_ = nh_.serviceClient<hrii_robothon_msgs::Homing>(homing_service_name_);
 
-            board_detection_service_name_ = "board_detection";
-            board_detection_client_ = nh_.serviceClient<hrii_robothon_msgs::BoardDetection>(board_detection_service_name_);
+            board_detection_activation_service_name_ = "board_detection_fsm/activate";
+            board_detection_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::BoardDetection>(board_detection_activation_service_name_);
 
             press_button_activation_service_name_ = "press_button_fsm/activate";
             press_button_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::PressButton>(press_button_activation_service_name_);
@@ -225,8 +225,8 @@ class MainFSM
         std::string homing_service_name_;
         ros::ServiceClient homing_client_;
 
-        std::string board_detection_service_name_;
-        ros::ServiceClient board_detection_client_;
+        std::string board_detection_activation_service_name_;
+        ros::ServiceClient board_detection_activation_client_;
 
         std::string press_button_activation_service_name_;
         ros::ServiceClient press_button_activation_client_;
@@ -266,6 +266,9 @@ class MainFSM
                             EXIT,
                             ERROR} state_;
 
+        // Homing pose
+        geometry_msgs::Pose homing_pose;
+
         bool homing()
         {
             ROS_INFO("Go to home position...");
@@ -274,19 +277,18 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(homing_service_name_) << " ROS service...");
             homing_client_.waitForExistence();
 
+            // Define homing pose
+            homing_pose.position.x = 0.351;
+            homing_pose.position.y = -0.233;
+            homing_pose.position.z = 0.441;
+            homing_pose.orientation.x = -0.693;
+            homing_pose.orientation.y = 0.706;
+            homing_pose.orientation.z = -0.104;
+            homing_pose.orientation.w = -0.104;
+
             hrii_robothon_msgs::Homing homing_srv;
             homing_srv.request.robot_id = left_robot_id_;
-
-            // Home pose
-            geometry_msgs::Pose home_pose;
-            home_pose.position.x = 0.351;
-            home_pose.position.y = -0.233;
-            home_pose.position.z = 0.441;
-            home_pose.orientation.x = -0.693;
-            home_pose.orientation.y = 0.706;
-            home_pose.orientation.z = -0.104;
-            home_pose.orientation.w = -0.104;
-            homing_srv.request.home_pose.pose = home_pose;
+            homing_srv.request.home_pose.pose = homing_pose;
 
             if (!homing_client_.call(homing_srv))
             {
@@ -306,16 +308,16 @@ class MainFSM
         {
             ROS_INFO("Detecting board...");
 
-            ros::Duration(1).sleep();
-
-            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_service_name_) << " ROS service...");
-            board_detection_client_.waitForExistence();
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName(board_detection_activation_service_name_) << " ROS service...");
+            board_detection_activation_client_.waitForExistence();
 
             hrii_robothon_msgs::BoardDetection board_detection_srv;
+            board_detection_srv.request.robot_id = left_robot_id_;
+            board_detection_srv.request.homing_pose.pose = homing_pose;
 
-            if (!board_detection_client_.call(board_detection_srv))
+            if (!board_detection_activation_client_.call(board_detection_srv))
             {
-                ROS_ERROR("Error calling board detection service.");
+                ROS_ERROR("Error calling board detection activation service.");
                 return false;
             }
             else if (!board_detection_srv.response.success)
@@ -323,6 +325,7 @@ class MainFSM
                 ROS_ERROR("Failure detecting board. Exiting.");
                 return false;
             }
+            
             ROS_INFO("Board detected.");
             return true;
         }
