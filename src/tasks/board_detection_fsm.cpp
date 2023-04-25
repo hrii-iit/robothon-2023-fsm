@@ -106,7 +106,7 @@ class BoardDetectionFSM
             red_button_pose.position.x = redButtonTransform.transform.translation.x;
             red_button_pose.position.y = redButtonTransform.transform.translation.y;
             // 24 cm below homing on the z-axis
-            red_button_pose.position.z = req.homing_pose.pose.position.z - 0.20;
+            red_button_pose.position.z = req.homing_pose.pose.position.z - 0.24;
 
             waypoints.push_back(red_button_pose);
 

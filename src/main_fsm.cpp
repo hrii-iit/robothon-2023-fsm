@@ -727,6 +727,23 @@ class MainFSM
             stow_probe_cable_srv.request.left_wire_reel_probe_holder_robot_pose.pose = left_wire_reel_probe_holder_robot_pose;
             stow_probe_cable_srv.request.left_wire_reel_cable_stower_robot_pose.pose = left_wire_reel_cable_stower_robot_pose;
 
+            // Get task_board_ending_connector_hole_link pose w.r.t probe holder robot
+            geometry_msgs::TransformStamped probeHolderRobotToEndingConnectorHoleTransform;
+            try
+            {
+                probeHolderRobotToEndingConnectorHoleTransform = tf_buffer_.lookupTransform(stow_probe_cable_srv.request.probe_holder_robot_id+"_link0", "task_board_ending_connector_hole_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << stow_probe_cable_srv.request.probe_holder_robot_id << "_link0 and task_board_ending_connector_hole_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw " << stow_probe_cable_srv.request.probe_holder_robot_id <<"_link0 and task_board_ending_connector_hole_link NOT found!");
+                return false;
+            }
+            ROS_INFO_STREAM("Probe holder robot to ending connector hole:\n" << probeHolderRobotToEndingConnectorHoleTransform.transform);
+            stow_probe_cable_srv.request.probe_holder_robot_to_ending_connector_hole.pose = geometry_msgs::toPose(probeHolderRobotToEndingConnectorHoleTransform.transform);
+
+            // Call stow probe cable FSM activation
             if (!stow_probe_cable_activation_client_.call(stow_probe_cable_srv))
             {
                 ROS_ERROR("Error calling stow probe cable activation service.");

@@ -12,7 +12,8 @@ class StowProbeCableFSM
             nh_(nh),
             default_closing_gripper_speed_(10),
             default_grasping_gripper_force_(5.0),
-            controller_desired_pose_topic_name_("cart_hybrid_motion_force_controller/desired_tool_pose")
+            controller_desired_pose_topic_name_("cart_hybrid_motion_force_controller/desired_tool_pose"),
+            controller_set_EE_T_task_frame_service_name_("cart_hybrid_motion_force_controller/set_EE_T_task_frame")
         {
             activation_server_ = nh_.advertiseService("activate", &StowProbeCableFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
@@ -77,119 +78,65 @@ class StowProbeCableFSM
             
             double execution_time = 20.0;
 
-            // // Store probe handle pose
-            // geometry_msgs::Pose approach_probe_handle_pose, probe_handle_pose;
-            // probe_handle_pose = req.probe_handle_pose.pose;
-            // approach_probe_handle_pose = probe_handle_pose;
+            /* Move probe holder robot all the way up to keep to cable in tension */
+            // Store ending connector hole pose
+            geometry_msgs::Pose w_T_ending_connector_hole_msg, w_T_probe_tension_msg;
+            w_T_ending_connector_hole_msg = req.probe_holder_robot_to_ending_connector_hole.pose;
 
-            // // Move above the probe handle pose
-            // approach_probe_handle_pose.position.z += 0.15;
-            // if(!traj_helper_->moveToTargetPoseAndWait(approach_probe_handle_pose, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to reach the approach the probe.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            // Design tf from ending connector hole to probe tension
+            Eigen::Affine3d w_T_ending_connector_hole, ending_connector_hole_T_probe_tension;
+            ending_connector_hole_T_probe_tension = Eigen::Affine3d::Identity();
+            ending_connector_hole_T_probe_tension.translate(Eigen::Vector3d(0.0, -0.28,-0.5));
 
-            // // Move to probe handle pose
-            // execution_time = 4.0;
-            // if(!traj_helper_->moveToTargetPoseAndWait(probe_handle_pose, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to reach the approach the probe.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            // Perform a rotation of 90 deg around y axis
+            ending_connector_hole_T_probe_tension.rotate(Eigen::AngleAxisd(M_PI/2, Eigen::Vector3d(0,1,0)));
 
-            // // Grasp the probe
-            // // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
-            // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
 
-            // // Extract the probe
-            // Eigen::Affine3d robot_link0_T_probe_handle;
-            // tf::poseMsgToEigen(probe_handle_pose, robot_link0_T_probe_handle);
+            ROS_INFO_STREAM("ending_connector_hole_T_probe_tension:\n" << ending_connector_hole_T_probe_tension.matrix());
 
-            // Eigen::Affine3d probe_handle_T_probe_extraction_pose = Eigen::Affine3d::Identity();
-            // probe_handle_T_probe_extraction_pose.translation() << 0, 0.0, -0.03;
-            // geometry_msgs::Pose desired_pose_msg;
-            // tf::poseEigenToMsg(robot_link0_T_probe_handle * probe_handle_T_probe_extraction_pose, desired_pose_msg);
-            // execution_time = 5.0;
 
-            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to extract the handle.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            // ending_connector_hole_T_probe_tension. ()[2] = -0.50;
 
-            // // Approach circuit pose
-            // desired_pose_msg = req.circuit_pose.pose;
-            // desired_pose_msg.position.z += 0.1;
-            // execution_time = 8.0;
-            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to approach the circuit pose.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            tf::poseMsgToEigen(w_T_ending_connector_hole_msg, w_T_ending_connector_hole);
 
-            // // Approach circuit pose
-            // desired_pose_msg = req.circuit_pose.pose;
-            // desired_pose_msg.position.z += 0.04;
-            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to extract the handle.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            Eigen::Affine3d w_T_probe_tension = w_T_ending_connector_hole * ending_connector_hole_T_probe_tension;
 
-            // // Switch to task force in Z-axis
-            // geometry_msgs::WrenchStamped desired_wrench;
-            // desired_wrench.header.stamp = ros::Time::now();
-            // desired_wrench.wrench.force.z = desired_contact_force_;
-            // // desired_wrench.wrench.force.z = 0.0;
+            geometry_msgs::PoseStamped w_T_door_pushing_start_msg;
+            tf::poseEigenToMsg(w_T_probe_tension, w_T_probe_tension_msg);
 
-            // if (!applyContactForce(nh_, req.robot_id,
-            //                 "cart_hybrid_motion_force_controller",
-            //                 hrii_robot_msgs::TaskSelection::Request::Z_LIN,
-            //                 desired_wrench))
-            // {
-            //     ROS_ERROR_STREAM("Contact force application failed.");
-            //     return false;
-            // }
+            // Move above the probe handle pose
+            if(!probe_holder_robot_traj_helper_->moveToTargetPoseAndWait(w_T_probe_tension_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.probe_holder_robot_id+" failed to move to probe tension pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
 
-            // // Move to approach pose
-            // desired_pose_msg = req.circuit_pose.pose;
-            // desired_pose_msg.position.z += 0.15;
-            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to extract the handle.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+           
 
 
 
 
-            // // Task frame back to original one
-            // hrii_robot_msgs::SetPose original_EE_T_task_frame_srv;
-            // original_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 1.0; 
+            // Open the gripper to release the probe
+            // if (!probe_holder_robot_gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
+            // if (!probe_holder_robot_gripper_->open(default_closing_gripper_speed_)) ROS_WARN("Gripper: open failed...");
 
-            // if (!controller_set_EE_T_task_frame_client_.call(original_EE_T_task_frame_srv))
-            // {
-            //     ROS_ERROR("Error calling set_EE_T_task_frame ROS service.");
-            //     return false;
-            // }
-            // else if (!original_EE_T_task_frame_srv.response.success)
-            // {
-            //     ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
-            //     return false;
-            // }
+
+            // Task frame back to original one
+            hrii_robot_msgs::SetPose original_EE_T_task_frame_srv;
+            original_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 1.0; 
+
+            if (!controller_set_EE_T_task_frame_client_.call(original_EE_T_task_frame_srv))
+            {
+                ROS_ERROR("Error calling set_EE_T_task_frame ROS service.");
+                return false;
+            }
+            else if (!original_EE_T_task_frame_srv.response.success)
+            {
+                ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
+                return false;
+            }
 
             ROS_INFO("Probe cable stowed.");
 
