@@ -16,7 +16,7 @@ class BoardDetectionFSM
             nh_(nh), tf_listener_{tf_buffer_}
         {
             board_localization_service_name_ = "/robothon/board_localization";
-            board_localization_client_ = nh_.serviceClient<hrii_robothon_msgs::BoardDetection>(board_localization_service_name_);
+            board_localization_client_ = nh_.serviceClient<hrii_robothon_msgs::BoardLocalization>(board_localization_service_name_);
 
             activation_server_ = nh_.advertiseService("activate", &BoardDetectionFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
@@ -71,6 +71,22 @@ class BoardDetectionFSM
                 return false;
             }
 
+            // Retrieve and print tf from world to task_board_base_link
+            geometry_msgs::TransformStamped taskBoardBaseLinkTransform;
+            try{
+                taskBoardBaseLinkTransform = tf_buffer_.lookupTransform("world", "task_board_base_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw world and task_board_base_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw world and task_board_base_link NOT found!");
+            }
+
+            ROS_INFO_STREAM("Task board base link: " << taskBoardBaseLinkTransform.transform.translation);
+            ROS_INFO_STREAM("Task board base orientation: " << taskBoardBaseLinkTransform.transform.rotation);
+
+
             // Move above the red button
             geometry_msgs::TransformStamped redButtonTransform;
             try{
@@ -90,8 +106,7 @@ class BoardDetectionFSM
             red_button_pose.position.x = redButtonTransform.transform.translation.x;
             red_button_pose.position.y = redButtonTransform.transform.translation.y;
             // 24 cm below homing on the z-axis
-            red_button_pose.position.z = req.homing_pose.pose.position.z - 0.24;
-            // red_button_pose.position.z += -0.24; - 0.24;
+            red_button_pose.position.z = req.homing_pose.pose.position.z - 0.20;
 
             waypoints.push_back(red_button_pose);
 
@@ -114,6 +129,35 @@ class BoardDetectionFSM
                 ROS_ERROR("Failure localizing board. Exiting.");
                 return false;
             }
+
+            ros::Duration(1.0).sleep();
+
+
+            // Retrieve and print tf from world to task_board_base_link
+            geometry_msgs::TransformStamped taskBoardBaseLinkTransform_2;
+            try{
+                taskBoardBaseLinkTransform_2 = tf_buffer_.lookupTransform("world", "task_board_base_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw world and task_board_base_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw world and task_board_base_link NOT found!");
+            }
+
+            ROS_INFO_STREAM("Task board base link: " << taskBoardBaseLinkTransform_2.transform.translation);
+            ROS_INFO_STREAM("Task board base orientation: " << taskBoardBaseLinkTransform_2.transform.rotation);
+
+            ROS_INFO_STREAM("Task board base link difference");
+            ROS_INFO_STREAM("Position");
+            ROS_INFO_STREAM("x:" << taskBoardBaseLinkTransform.transform.translation.x - taskBoardBaseLinkTransform_2.transform.translation.x);
+            ROS_INFO_STREAM("y:" << taskBoardBaseLinkTransform.transform.translation.y - taskBoardBaseLinkTransform_2.transform.translation.y);
+            ROS_INFO_STREAM("z:" << taskBoardBaseLinkTransform.transform.translation.z - taskBoardBaseLinkTransform_2.transform.translation.z);
+            ROS_INFO_STREAM("Orientation");
+            ROS_INFO_STREAM("x:" << taskBoardBaseLinkTransform.transform.rotation.x - taskBoardBaseLinkTransform_2.transform.rotation.x);
+            ROS_INFO_STREAM("y:" << taskBoardBaseLinkTransform.transform.rotation.y - taskBoardBaseLinkTransform_2.transform.rotation.y);
+            ROS_INFO_STREAM("z:" << taskBoardBaseLinkTransform.transform.rotation.z - taskBoardBaseLinkTransform_2.transform.rotation.z);
+            ROS_INFO_STREAM("w:" << taskBoardBaseLinkTransform.transform.rotation.w - taskBoardBaseLinkTransform_2.transform.rotation.w);
 
             // We move the robot back to the homing pose
             waypoints.push_back(req.homing_pose.pose);
