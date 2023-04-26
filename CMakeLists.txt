@@ -45,6 +45,11 @@ set_target_properties(${PROJECT_NAME}_homing_fsm PROPERTIES OUTPUT_NAME "homing_
 add_dependencies(${PROJECT_NAME}_homing_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_homing_fsm ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_board_detection_fsm src/tasks/board_detection_fsm.cpp)
+set_target_properties(${PROJECT_NAME}_board_detection_fsm PROPERTIES OUTPUT_NAME "board_detection_fsm")
+add_dependencies(${PROJECT_NAME}_board_detection_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_board_detection_fsm ${catkin_LIBRARIES})
+
 add_executable(${PROJECT_NAME}_press_button_fsm src/tasks/press_button_fsm.cpp)
 set_target_properties(${PROJECT_NAME}_press_button_fsm PROPERTIES OUTPUT_NAME "press_button_fsm")
 add_dependencies(${PROJECT_NAME}_press_button_fsm ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})

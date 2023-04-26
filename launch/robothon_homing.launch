@@ -1,9 +1,17 @@
 <?xml version="1.0"?>
 <launch>
 
-<include file="$(find franka_example_controllers)/launch/move_to_start.launch" >
-  <arg name="start_pose" default="$(find hrii_task_board_fsm)/config/controllers/homing_pose.yaml" />
+<arg name="left_robot" default="false"/>
+<arg name="right_robot" default="false"/>
+
+<include if="$(arg left_robot)" file="$(find franka_example_controllers)/launch/move_to_start.launch" ns="franka_left" >
+  <arg name="start_pose" default="$(find hrii_task_board_fsm)/config/homing_pose_franka_left.yaml" />
   <arg name="robot_ip" default="192.168.0.102" />
+</include>
+
+<include if="$(arg right_robot)" file="$(find franka_example_controllers)/launch/move_to_start.launch" ns="franka_right" >
+  <arg name="start_pose" default="$(find hrii_task_board_fsm)/config/homing_pose_franka_right.yaml" />
+  <arg name="robot_ip" default="192.168.0.101" />
 </include>
 
 </launch>

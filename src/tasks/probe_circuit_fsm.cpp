@@ -104,6 +104,9 @@ class ProbeCircuitFSM
                 return true;
             }
 
+            ROS_INFO_STREAM("Probe handle pose transl:" << probe_handle_pose.position);
+            ROS_INFO_STREAM("Probe handle pose orient:\n" << probe_handle_pose.orientation);
+
             // Grasp the probe
             // if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
             if (!gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) ROS_WARN("Gripper: grasp from outside failed...");
@@ -129,7 +132,7 @@ class ProbeCircuitFSM
             // Approach circuit pose
             desired_pose_msg = req.circuit_pose.pose;
             desired_pose_msg.position.z += 0.1;
-            execution_time = 8.0;
+            execution_time = 5.0;
             if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
             {
                 res.success = false;
@@ -138,42 +141,43 @@ class ProbeCircuitFSM
                 return true;
             }
 
-            // Approach circuit pose
-            desired_pose_msg = req.circuit_pose.pose;
-            desired_pose_msg.position.z += 0.04;
-            if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            {
-                res.success = false;
-                res.message = req.robot_id+" failed to extract the handle.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-            }
+            // tmp avoiding probing
+            // // Approach circuit pose
+            // desired_pose_msg = req.circuit_pose.pose;
+            // desired_pose_msg.position.z += 0.04;
+            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
+            // {
+            //     res.success = false;
+            //     res.message = req.robot_id+" failed to extract the handle.";
+            //     ROS_ERROR_STREAM(res.message);
+            //     return true;
+            // }
 
-            // Switch to task force in Z-axis
-            geometry_msgs::WrenchStamped desired_wrench;
-            desired_wrench.header.stamp = ros::Time::now();
-            desired_wrench.wrench.force.z = desired_contact_force_;
-            // desired_wrench.wrench.force.z = 0.0;
+            // // Switch to task force in Z-axis
+            // geometry_msgs::WrenchStamped desired_wrench;
+            // desired_wrench.header.stamp = ros::Time::now();
+            // desired_wrench.wrench.force.z = desired_contact_force_;
+            // // desired_wrench.wrench.force.z = 0.0;
 
-            if (!applyContactForce(nh_, req.robot_id,
-                            "cart_hybrid_motion_force_controller",
-                            hrii_robot_msgs::TaskSelection::Request::Z_LIN,
-                            desired_wrench))
-            {
-                ROS_ERROR_STREAM("Contact force application failed.");
-                return false;
-            }
+            // if (!applyContactForce(nh_, req.robot_id,
+            //                 "cart_hybrid_motion_force_controller",
+            //                 hrii_robot_msgs::TaskSelection::Request::Z_LIN,
+            //                 desired_wrench))
+            // {
+            //     ROS_ERROR_STREAM("Contact force application failed.");
+            //     return false;
+            // }
 
-            // Move to approach pose
-            desired_pose_msg = req.circuit_pose.pose;
-            desired_pose_msg.position.z += 0.15;
-            if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            {
-                res.success = false;
-                res.message = req.robot_id+" failed to extract the handle.";
-                ROS_ERROR_STREAM(res.message);
-                return true;
-            }
+            // // Move to approach pose
+            // desired_pose_msg = req.circuit_pose.pose;
+            // desired_pose_msg.position.z += 0.15;
+            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
+            // {
+            //     res.success = false;
+            //     res.message = req.robot_id+" failed to extract the handle.";
+            //     ROS_ERROR_STREAM(res.message);
+            //     return true;
+            // }
 
             // Task frame back to original one
             hrii_robot_msgs::SetPose original_EE_T_task_frame_srv;

@@ -22,6 +22,10 @@
     <arg name="task_board_init_pose_pitch" default="0.0"/>
     <arg name="task_board_init_pose_yaw" default="0.0"/>
 
+    <!-- Robot selection -->
+    <arg name="left_robot_launch" default="true"/>
+    <arg name="right_robot_launch" default="true"/>
+
     <!-- Left robot arguments -->
     <arg name="left_robot_id" default="franka_left"/>
     <arg name="left_robot_ip" default="192.168.0.102"/>
@@ -30,39 +34,42 @@
     <arg name="left_robot_gripper_config_file" default="$(find hrii_franka_gripper_interface)/config/franka_gripper.yaml"/>
     <arg name="left_robot_F_T_NE" default="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.137 1" doc="End effector pose wrt robot flange. The matrix is transposed"/>
     <arg name="left_robot_gripper_mass" default="0.760"/>
-    <!-- <arg name="left_robot_launch_gripper" default="no_gripper"/> -->
     <arg name="left_robot_urdf" default="$(find franka_description)/robots/panda_all_grippers/panda_all_grippers.urdf.xacro"/>
     <arg name="left_robot_xacro_args" default="launch_gripper:=$(arg left_robot_launch_gripper)"/>
     <arg name="left_robot_controller" default="cart_hybrid_motion_force_controller"/>
-    <!-- <arg name="left_robot_controller" default="matlogger"/> -->
     <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/desired_tool_pose"/>
     <!-- <arg name="left_robot_controller" default="cartesian_impedance_example_controller"/> -->
     <!-- <arg name="left_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/equilibrium_pose"/> -->
     <arg name="left_robot_init_pose_yaw" default="0"/>
     <arg name="left_robot_init_pose_x" default="-0.383"/>
     <arg name="left_robot_init_pose_y" default="0.268"/>
-    <arg name="left_robot_init_pose_z" default="0"/> <!-- it was -0.007 -->
+    <arg name="left_robot_init_pose_z" default="0"/> <!-- in real world it is -0.007 -->
     <arg name="left_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/controllers/franka_left_cart_hybrid_motion_force_controller.yaml"/>
-    
     <arg name="left_robot_launch_interactive_marker" default="false"/>
 
     <!-- Right robot arguments -->
     <arg name="right_robot_id" default="franka_right"/>
     <arg name="right_robot_ip" default="192.168.0.101"/>
-    <arg name="right_robot_launch_gripper" default="robotiq_2f85"/>
+    <arg name="right_robot_launch_gripper" default="franka_gripper"/>
+    <arg name="right_robot_gripper_brand" default="franka_gripper"/>
+    <arg name="right_robot_gripper_config_file" default="$(find hrii_franka_gripper_interface)/config/franka_gripper.yaml"/>
+    <arg name="right_robot_F_T_NE" default="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.133 1" doc="End effector pose wrt robot flange. The matrix is transposed"/>
+    <arg name="right_robot_gripper_mass" default="0.760"/>
     <arg name="right_robot_urdf" default="$(find franka_description)/robots/panda_all_grippers/panda_all_grippers.urdf.xacro"/>
     <arg name="right_robot_xacro_args" default="launch_gripper:=$(arg right_robot_launch_gripper)"/>
     <arg name="right_robot_controller" default="cart_hybrid_motion_force_controller"/>
-    <arg name="right_robot_controller_desired_pose_topic" default="$(arg left_robot_controller)/desired_tool_pose"/>
-    <arg name="right_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/franka_right_cart_hybrid_motion_force_controller.yaml"/>
-    <arg name="right_robot_init_pose_x" default="0"/>
-    <arg name="right_robot_init_pose_y" default="0.45"/>
-    <arg name="right_robot_init_pose_z" default="0"/>
-    <arg name="right_robot_init_pose_yaw" default="-1.5707"/>
+    <arg name="right_robot_controller_desired_pose_topic" default="$(arg right_robot_controller)/desired_tool_pose"/>
+    <!-- <arg name="right_robot_controller" default="cartesian_impedance_example_controller"/> -->
+    <!-- <arg name="right_robot_controller_desired_pose_topic" default="$(arg right_robot_controller)/equilibrium_pose"/> -->
+    <arg name="right_robot_init_pose_yaw" default="3.14159"/>
+    <arg name="right_robot_init_pose_x" default="0.475"/>
+    <arg name="right_robot_init_pose_y" default="-0.317"/>
+    <arg name="right_robot_init_pose_z" default="0"/> <!-- in real world it is -0.007 -->
+    <arg name="right_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/controllers/franka_right_cart_hybrid_motion_force_controller.yaml"/>
     <arg name="right_robot_launch_interactive_marker" default="false"/>
 
     <!-- Launch left robot -->
-    <group ns="$(arg left_robot_id)">
+    <group ns="$(arg left_robot_id)" if="$(arg left_robot_launch)">
         <include file="$(find hrii_task_board_fsm)/launch/launch_robot.xml" pass_all_args="true">
             <arg name="arm_id" value="$(arg left_robot_id)"/>
             <arg name="robot_ip" value="$(arg left_robot_ip)"/>
@@ -85,11 +92,15 @@
     </group>
 
     <!-- Launch right robot -->
-    <!-- <group ns="$(arg right_robot_id)">
+    <group ns="$(arg right_robot_id)" if="$(arg right_robot_launch)">
         <include file="$(find hrii_task_board_fsm)/launch/launch_robot.xml" pass_all_args="true">
             <arg name="arm_id" value="$(arg right_robot_id)"/>
             <arg name="robot_ip" value="$(arg right_robot_ip)"/>
             <arg name="launch_gripper" value="$(arg right_robot_launch_gripper)"/>
+            <arg name="gripper_brand" value="$(arg right_robot_gripper_brand)"/>
+            <arg name="gripper_config_file" value="$(arg right_robot_gripper_config_file)"/>
+            <arg name="F_T_NE" value="$(arg right_robot_F_T_NE)"/>
+            <arg name="gripper_mass" value="$(arg right_robot_gripper_mass)"/>
             <arg name="robot_urdf" value="$(arg right_robot_urdf)"/>
             <arg name="xacro_args" value="$(arg right_robot_xacro_args)"/>
             <arg name="x" value="$(arg right_robot_init_pose_x)"/>
@@ -101,7 +112,7 @@
             <arg name="controller_desired_pose_topic" value="$(arg right_robot_controller_desired_pose_topic)"/>
             <arg name="launch_interactive_marker" value="$(arg right_robot_launch_interactive_marker)"/>
         </include>
-    </group> -->
+    </group>
 
     <group if="$(arg sim)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -112,10 +123,7 @@
         </include>
     </group>
 
-    <!-- Temporary! In the future given by perception module -->
-    <!-- Link from world to task_board_base_link -->
-    <!-- x y z roll pitch yaw -->
-    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="task_board_test_br" args="0 0 0 0 0 0.3826834 0.9238795  world task_board_base_link"/> -->
+    <!-- Link from world to task_board_base_link. If false, given by the percpetion module -->
     <node if="$(arg task_board_publish_manual_tf)" pkg="tf2_ros" type="static_transform_publisher" name="task_board_test_br" 
             args="$(arg task_board_init_pose_x)
                 $(arg task_board_init_pose_y)
@@ -142,10 +150,13 @@
         <node pkg="hrii_task_board_fsm" type="main_fsm" name="main_fsm" output="screen" respawn="false">
             <param name="left_robot_id" value="$(arg left_robot_id)"/>
             <param name="right_robot_id" value="$(arg right_robot_id)"/>
+            <param name="left_robot_launch" value="$(arg left_robot_launch)"/>
+            <param name="right_robot_launch" value="$(arg right_robot_launch)"/>
             <rosparam file="$(arg task_order_config_file)"/>
         </node>
 
         <node pkg="hrii_task_board_fsm" type="homing_fsm" name="homing_fsm" output="screen" respawn="false"/>
+        <node pkg="hrii_task_board_fsm" type="board_detection_fsm" name="board_detection_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="press_button_fsm" name="press_button_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="move_slider_fsm" name="move_slider_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="move_plug_fsm" name="move_plug_fsm" output="screen" respawn="false"/>
