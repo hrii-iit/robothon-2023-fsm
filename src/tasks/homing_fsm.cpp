@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include "hrii_robothon_msgs/Homing.h"
+#include "hrii_robot_msgs/SetPose.h"
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
 
@@ -8,7 +9,8 @@ class HomingFSM
     public:
         HomingFSM(ros::NodeHandle& nh) : 
             nh_(nh),
-            default_closing_gripper_speed_(10)
+            default_closing_gripper_speed_(10),
+            controller_set_EE_T_task_frame_service_name_("cart_hybrid_motion_force_controller/set_EE_T_task_frame")
         {
             activation_server_ = nh_.advertiseService("activate", &HomingFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
@@ -20,6 +22,9 @@ class HomingFSM
         double default_closing_gripper_speed_;
         HRII::TrajectoryHelper::Ptr traj_helper_;
 
+        ros::ServiceClient controller_set_EE_T_task_frame_client_;
+        std::string controller_set_EE_T_task_frame_service_name_;
+
         ros::ServiceServer activation_server_;
         
 
@@ -27,6 +32,26 @@ class HomingFSM
                                 hrii_robothon_msgs::Homing::Response& res)
         {
             ROS_INFO_STREAM("Activate homing for robot: " << req.robot_id);
+
+            controller_set_EE_T_task_frame_client_ = nh_.serviceClient<hrii_robot_msgs::SetPose>("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_);
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_) << " ROS service...");
+            controller_set_EE_T_task_frame_client_.waitForExistence();
+
+            // Set task frame to the end-effector frame
+            hrii_robot_msgs::SetPose set_EE_T_task_frame_srv;
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.position.z = 0; 
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 1.0; 
+
+            if (!controller_set_EE_T_task_frame_client_.call(set_EE_T_task_frame_srv))
+            {
+                ROS_ERROR("Error calling set_EE_T_task_frame ROS service.");
+                return false;
+            }
+            else if (!set_EE_T_task_frame_srv.response.success)
+            {
+                ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
+                return false;
+            }
 
             //Wait until the controller_started param is found
             // ROS_WARN("Waiting for controller to start...");

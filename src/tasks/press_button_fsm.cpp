@@ -3,6 +3,7 @@
 #include "hrii_trajectory_planner/trajectory_helper/TrajectoryHelper.h"
 #include "hrii_gri_interface/client_helper/GripperInterfaceClientHelper.h"
 #include "hrii_robothon_msgs/PressButton.h"
+#include "hrii_robot_msgs/SetPose.h"
 #include "hrii_task_board_fsm/utils/ControllerUtils.h"
 
 class PressButtonFSM
@@ -12,7 +13,8 @@ class PressButtonFSM
             nh_(nh),
             default_closing_gripper_speed_(10),
             desired_contact_force_(10),
-            controller_name_("cart_hybrid_motion_force_controller")
+            controller_name_("cart_hybrid_motion_force_controller"),
+            controller_set_EE_T_task_frame_service_name_("cart_hybrid_motion_force_controller/set_EE_T_task_frame")
         {
             activation_server_ = nh_.advertiseService("activate", &PressButtonFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
@@ -25,6 +27,9 @@ class PressButtonFSM
         GripperInterfaceClientHelper::Ptr gripper_;
         double default_closing_gripper_speed_;
 
+        ros::ServiceClient controller_set_EE_T_task_frame_client_;
+        std::string controller_set_EE_T_task_frame_service_name_;
+
         ros::ServiceServer activation_server_;
         //ros::Publisher desired_wrench_pub_;
         double desired_contact_force_;
@@ -35,6 +40,26 @@ class PressButtonFSM
                                 hrii_robothon_msgs::PressButton::Response& res)
         {
             ROS_INFO_STREAM("Activate press button interface for robot: " << req.robot_id);
+
+            controller_set_EE_T_task_frame_client_ = nh_.serviceClient<hrii_robot_msgs::SetPose>("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_);
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName("/"+req.robot_id+"/"+controller_set_EE_T_task_frame_service_name_) << " ROS service...");
+            controller_set_EE_T_task_frame_client_.waitForExistence();
+
+            // Set task frame to the end-effector frame
+            hrii_robot_msgs::SetPose set_EE_T_task_frame_srv;
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.position.z = 0; 
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 1.0; 
+
+            if (!controller_set_EE_T_task_frame_client_.call(set_EE_T_task_frame_srv))
+            {
+                ROS_ERROR("Error calling set_EE_T_task_frame ROS service.");
+                return false;
+            }
+            else if (!set_EE_T_task_frame_srv.response.success)
+            {
+                ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
+                return false;
+            }
 
             // Trajectory helper declaration and initialization
             traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.robot_id+"/trajectory_handler");
