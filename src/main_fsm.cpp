@@ -23,7 +23,7 @@ class MainFSM
             homing_service_name_ = "homing_fsm/activate";
             homing_client_ = nh_.serviceClient<hrii_robothon_msgs::Homing>(homing_service_name_);
 
-            board_detection_service_name_ = "board_detection";
+            board_detection_service_name_ = "board_detection_fsm/activate";
             board_detection_client_ = nh_.serviceClient<hrii_robothon_msgs::BoardDetection>(board_detection_service_name_);
 
             press_button_activation_service_name_ = "press_button_fsm/activate";
