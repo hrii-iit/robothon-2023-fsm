@@ -29,8 +29,8 @@ class StowProbeCableFSM
 
         ros::ServiceServer activation_server_;
 
-        ros::ServiceClient controller_set_EE_T_task_frame_client_;
-        std::string controller_set_EE_T_task_frame_service_name_;
+        ros::ServiceClient controller_set_EE_T_task_frame_client_, cs_controller_set_EE_T_task_frame_client_;
+        std::string controller_set_EE_T_task_frame_service_name_, cs_controller_set_EE_T_task_frame_service_name_;
 
         ros::Publisher desired_pose_pub_;
         std::string controller_desired_pose_topic_name_;
@@ -41,7 +41,10 @@ class StowProbeCableFSM
 
             ROS_INFO_STREAM("Activate probe cable stowing. Probe holder: " << req.probe_holder_robot_id << " - Cable stower: " << req.cable_stower_robot_id);
 
-            // Change task frame of Probe holder robot
+            ROS_WARN_STREAM("Tmp sleep to wait for controllers activation(3s)");
+            ros::Duration(3.0).sleep();
+
+            // Change task frame of Probe Holder (ph) robot
             controller_set_EE_T_task_frame_client_ = nh_.serviceClient<hrii_robot_msgs::SetPose>("/"+req.probe_holder_robot_id+"/"+controller_set_EE_T_task_frame_service_name_);
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName("/"+req.probe_holder_robot_id+"/"+controller_set_EE_T_task_frame_service_name_) << " ROS service...");
             controller_set_EE_T_task_frame_client_.waitForExistence();
@@ -61,6 +64,29 @@ class StowProbeCableFSM
             else if (!set_EE_T_task_frame_srv.response.success)
             {
                 ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
+                return false;
+            }
+
+            // Change task frame of Cable Stower (cs) robot
+            cs_controller_set_EE_T_task_frame_client_ = nh_.serviceClient<hrii_robot_msgs::SetPose>("/"+req.cable_stower_robot_id+"/"+controller_set_EE_T_task_frame_service_name_);
+            ROS_INFO_STREAM("Waiting for " << nh_.resolveName("/"+req.cable_stower_robot_id+"/"+controller_set_EE_T_task_frame_service_name_) << " ROS service...");
+            cs_controller_set_EE_T_task_frame_client_.waitForExistence();
+
+            // Set the new task frame to probe hole in gripper fingertips
+            // The task frame is rotated by -45° on y-axis wrt EE orientation
+            hrii_robot_msgs::SetPose cs_set_EE_T_task_frame_srv;
+            // cs_set_EE_T_task_frame_srv.request.pose_stamped.pose.position.z = -0.01;
+            cs_set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.y = -0.3826834; 
+            cs_set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 0.9238795; 
+
+            if (!cs_controller_set_EE_T_task_frame_client_.call(cs_set_EE_T_task_frame_srv))
+            {
+                ROS_ERROR("Error calling cs_set_EE_T_task_frame ROS service.");
+                return false;
+            }
+            else if (!cs_set_EE_T_task_frame_srv.response.success)
+            {
+                ROS_ERROR("Failure setting cs_EE_T_task_frame. Exiting.");
                 return false;
             }
 
@@ -90,29 +116,27 @@ class StowProbeCableFSM
 
             /* Move probe holder robot all the way up to keep to cable in tension */
             // Store ending connector hole pose
-            geometry_msgs::Pose w_T_ending_connector_hole_msg, w_T_probe_tension_msg;
-            w_T_ending_connector_hole_msg = req.probe_holder_robot_to_ending_connector_hole.pose;
+            geometry_msgs::Pose ph_T_ending_connector_hole_msg, ph_T_probe_tension_msg;
+            ph_T_ending_connector_hole_msg = req.probe_holder_robot_to_ending_connector_hole.pose;
 
-            // Design tf from ending connector hole to probe tension
-            Eigen::Affine3d w_T_ending_connector_hole, ending_connector_hole_T_probe_tension;
+            // Probe holder: design tf from ending connector hole to probe tension
+            Eigen::Affine3d ph_T_ending_connector_hole, ending_connector_hole_T_probe_tension;
             ending_connector_hole_T_probe_tension = Eigen::Affine3d::Identity();
-            ending_connector_hole_T_probe_tension.translate(Eigen::Vector3d(0.0, -0.28,-0.5));
+            // ending_connector_hole_T_probe_tension.translate(Eigen::Vector3d(-0.10, -0.28,-0.5));
+            // ending_connector_hole_T_probe_tension.translate(Eigen::Vector3d(-0.10, -0.28,-0.78)); this was good but the other robot cannot reach, consider to pull up afterwards
+            ending_connector_hole_T_probe_tension.translate(Eigen::Vector3d(0.10, -0.28,-0.63));
 
-            // Perform a rotation of 90 deg around y axis
-            ending_connector_hole_T_probe_tension.rotate(Eigen::AngleAxisd(M_PI/2, Eigen::Vector3d(0,1,0)));
+            // Perform a rotation of 90 + 45 deg around y-axis
+            ending_connector_hole_T_probe_tension.rotate(Eigen::AngleAxisd(M_PI/2 + M_PI/4, Eigen::Vector3d(0,1,0)));
             ROS_INFO_STREAM("ending_connector_hole_T_probe_tension:\n" << ending_connector_hole_T_probe_tension.matrix());
 
-            // ending_connector_hole_T_probe_tension. ()[2] = -0.50;
-
-            tf::poseMsgToEigen(w_T_ending_connector_hole_msg, w_T_ending_connector_hole);
-
-            Eigen::Affine3d w_T_probe_tension = w_T_ending_connector_hole * ending_connector_hole_T_probe_tension;
-
-            geometry_msgs::PoseStamped w_T_door_pushing_start_msg;
-            tf::poseEigenToMsg(w_T_probe_tension, w_T_probe_tension_msg);
+            tf::poseMsgToEigen(ph_T_ending_connector_hole_msg, ph_T_ending_connector_hole);
+            Eigen::Affine3d ph_T_probe_tension = ph_T_ending_connector_hole * ending_connector_hole_T_probe_tension;
+            tf::poseEigenToMsg(ph_T_probe_tension, ph_T_probe_tension_msg);
 
             // Probe holder: move above the probe handle pose
-            if(!probe_holder_robot_traj_helper_->moveToTargetPoseAndWait(w_T_probe_tension_msg, execution_time))
+            ROS_INFO("[Probe Holder] Moving to probe tension pose");
+            if(!probe_holder_robot_traj_helper_->moveToTargetPoseAndWait(ph_T_probe_tension_msg, execution_time))
             {
                 res.success = false;
                 res.message = req.probe_holder_robot_id+" failed to move to probe tension pose.";
@@ -120,20 +144,47 @@ class StowProbeCableFSM
                 return true;
             }
 
-            // Compute grasp cable pose (for cable stower)
-            geometry_msgs::Pose w_T_grasp_cable_msg;
+            // Cable stower: compute grasp and pregrasp cable pose
+            geometry_msgs::Pose cs_T_ending_connector_hole_msg, cs_T_grasp_cable_msg, cs_T_pregrasp_cable_msg;
+            cs_T_ending_connector_hole_msg = req.cable_stower_robot_to_ending_connector_hole.pose;
 
-            // TODO restart from here
+            Eigen::Affine3d cs_T_ending_connector_hole, ending_connector_hole_T_grasp_cable, ending_connector_hole_T_pregrasp_cable;
+            ending_connector_hole_T_grasp_cable = Eigen::Affine3d::Identity();
+            ending_connector_hole_T_pregrasp_cable = Eigen::Affine3d::Identity();
+            ending_connector_hole_T_grasp_cable.translate(Eigen::Vector3d(0.02, -0.28,-0.45));
+            ending_connector_hole_T_pregrasp_cable.translate(Eigen::Vector3d(0.20, -0.28,-0.45));
 
+            // Perform a rotation of 180 deg around z-axis
+            ending_connector_hole_T_grasp_cable.rotate(Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0,0,1)));
+            ending_connector_hole_T_pregrasp_cable.rotate(Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0,0,1)));
+            // ROS_INFO_STREAM("ending_connector_hole_T_grasp_cable:\n" << ending_connector_hole_T_grasp_cable.matrix());
 
-            // Cable stower: move to grasp cable
-            // if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(w_T_grasp_cable_msg, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.cable_stower_robot_id+" failed to move to grasp cable pose.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            tf::poseMsgToEigen(cs_T_ending_connector_hole_msg, cs_T_ending_connector_hole);
+            Eigen::Affine3d cs_T_grasp_cable = cs_T_ending_connector_hole * ending_connector_hole_T_grasp_cable;
+            tf::poseEigenToMsg(cs_T_grasp_cable, cs_T_grasp_cable_msg);
+
+            Eigen::Affine3d cs_T_pregrasp_cable = cs_T_ending_connector_hole * ending_connector_hole_T_pregrasp_cable;
+            tf::poseEigenToMsg(cs_T_pregrasp_cable, cs_T_pregrasp_cable_msg);
+
+            // Cable Stower: move to pregrasp cable
+            ROS_INFO("[Cable Stower] Moving to pregrasp cable pose");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_pregrasp_cable_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to move to grasp cable pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+            // Cable Stower: move to grasp cable
+            ROS_INFO("[Cable Stower] Moving to grasp cable pose");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_grasp_cable_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to move to grasp cable pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
 
             // Cable stower: grasp the cable
             // if (!probe_holder_robot_gripper_->graspFromOutside(default_closing_gripper_speed_, default_grasping_gripper_force_)) return false;
@@ -149,20 +200,33 @@ class StowProbeCableFSM
             // if (!probe_holder_robot_gripper_->open(default_closing_gripper_speed_)) ROS_WARN("Gripper: open failed...");
 
 
-            // Task frame back to original one
+            // Task frames back to original one
             hrii_robot_msgs::SetPose original_EE_T_task_frame_srv;
             original_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 1.0; 
 
+            // Probe Holder
             if (!controller_set_EE_T_task_frame_client_.call(original_EE_T_task_frame_srv))
             {
-                ROS_ERROR("Error calling set_EE_T_task_frame ROS service.");
+                ROS_ERROR("Error calling set_EE_T_task_frame ROS service (Probe Holder).");
                 return false;
             }
             else if (!original_EE_T_task_frame_srv.response.success)
             {
-                ROS_ERROR("Failure setting EE_T_task_frame. Exiting.");
+                ROS_ERROR("Failure setting EE_T_task_frame (Probe Holder). Exiting.");
                 return false;
             }
+
+            // Cable Stower
+            // if (!cs_controller_set_EE_T_task_frame_client_.call(original_EE_T_task_frame_srv))
+            // {
+            //     ROS_ERROR("Error calling set_EE_T_task_frame ROS service (Cable Stower).");
+            //     return false;
+            // }
+            // else if (!original_EE_T_task_frame_srv.response.success)
+            // {
+            //     ROS_ERROR("Failure setting EE_T_task_frame (Cable Stower). Exiting.");
+            //     return false;
+            // }
 
             ROS_INFO("Probe cable stowed.");
 
