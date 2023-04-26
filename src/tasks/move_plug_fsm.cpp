@@ -147,7 +147,7 @@ class MovePlugFSM
             waypoints.erase(waypoints.begin());
 
             // Gripper opening
-            if (!gripper_->open(default_closing_gripper_speed_)) return false;
+            if (!gripper_->setWidth(default_closing_gripper_speed_,0.03)) return false;
 
             // Move the robot up
             ending_pose.position.z+=0.050;
