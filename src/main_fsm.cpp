@@ -804,6 +804,22 @@ class MainFSM
             ROS_INFO_STREAM("Cable stower robot to ending connector hole:\n" << cableStowerRobotToEndingConnectorHoleTransform.transform);
             stow_probe_cable_srv.request.cable_stower_robot_to_ending_connector_hole.pose = geometry_msgs::toPose(cableStowerRobotToEndingConnectorHoleTransform.transform);
 
+            // Get task_board_base_link pose w.r.t cable stower robot
+            geometry_msgs::TransformStamped cableStowerRobotToBaseLinkTransform;
+            try
+            {
+                cableStowerRobotToBaseLinkTransform = tf_buffer_.lookupTransform(stow_probe_cable_srv.request.cable_stower_robot_id+"_link0", "task_board_base_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw " << stow_probe_cable_srv.request.cable_stower_robot_id << "_link0 and task_board_base_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw " << stow_probe_cable_srv.request.cable_stower_robot_id <<"_link0 and task_board_base_link NOT found!");
+                return false;
+            }
+            ROS_INFO_STREAM("Cable stower robot to base link:\n" << cableStowerRobotToBaseLinkTransform.transform);
+            stow_probe_cable_srv.request.cable_stower_robot_to_base_link.pose = geometry_msgs::toPose(cableStowerRobotToBaseLinkTransform.transform);
+
             // Call stow probe cable FSM activation
             if (!stow_probe_cable_activation_client_.call(stow_probe_cable_srv))
             {

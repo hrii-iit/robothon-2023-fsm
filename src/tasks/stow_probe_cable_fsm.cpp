@@ -41,7 +41,7 @@ class StowProbeCableFSM
 
             ROS_INFO_STREAM("Activate probe cable stowing. Probe holder: " << req.probe_holder_robot_id << " - Cable stower: " << req.cable_stower_robot_id);
 
-            ROS_WARN_STREAM("Tmp sleep to wait for controllers activation (2s). To be removed!");
+            ROS_ERROR_STREAM("Tmp sleep to wait for controllers activation (2s). To be removed!");
             ros::Duration(2.0).sleep();
 
             // Trajectory helpers declaration and initialization
@@ -97,9 +97,11 @@ class StowProbeCableFSM
             geometry_msgs::Pose cs_T_ending_connector_hole_msg, cs_T_grasp_cable_msg, cs_T_pregrasp_cable_msg;
             cs_T_ending_connector_hole_msg = req.cable_stower_robot_to_ending_connector_hole.pose;
 
-            Eigen::Affine3d cs_T_ending_connector_hole, ending_connector_hole_T_grasp_cable, ending_connector_hole_T_pregrasp_cable;
+            Eigen::Affine3d cs_T_ending_connector_hole, ending_connector_hole_T_grasp_cable;
             ending_connector_hole_T_grasp_cable = Eigen::Affine3d::Identity();
-            ending_connector_hole_T_grasp_cable.translate(Eigen::Vector3d(-0.045,0.0,0.0));
+            // ending_connector_hole_T_grasp_cable.translate(Eigen::Vector3d(-0.045,0.0,-0.004));
+            ending_connector_hole_T_grasp_cable.translate(Eigen::Vector3d(-0.053,0.0,-0.006));
+            ending_connector_hole_T_grasp_cable.rotate(Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0,0,1)));
 
             tf::poseMsgToEigen(cs_T_ending_connector_hole_msg, cs_T_ending_connector_hole);
             Eigen::Affine3d cs_T_grasp_cable = cs_T_ending_connector_hole * ending_connector_hole_T_grasp_cable;
@@ -110,7 +112,7 @@ class StowProbeCableFSM
             cs_T_pregrasp_cable_msg.position.z += 0.1;
 
             // Cable Stower: move to pregrasp cable
-            execution_time = 7.0;
+            execution_time = 5.0;
             ROS_INFO("[Cable Stower] Moving to pregrasp cable pose");
             if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_pregrasp_cable_msg, execution_time))
             {
@@ -135,25 +137,201 @@ class StowProbeCableFSM
             if (!cable_stower_robot_gripper_->close(default_closing_gripper_speed_)) ROS_WARN("Gripper: close failed...");
 
 
-            // Cable Stower: move to left 1
-            geometry_msgs::Pose cs_T_left_1_msg;
-            Eigen::Affine3d cs_T_left_1, ending_connector_hole_T_left_1;
-            ending_connector_hole_T_left_1 = ending_connector_hole_T_grasp_cable;
+            // Cable Stower: move to left 1 prepare (step 1)
+            geometry_msgs::Pose cs_T_left_1_prepare_msg;
+            Eigen::Affine3d cs_T_left_1_prepare, ending_connector_hole_T_left_1_prepare;
+            ending_connector_hole_T_left_1_prepare = ending_connector_hole_T_grasp_cable;
 
-            ending_connector_hole_T_left_1.translate(Eigen::Vector3d(-0.10,0.0,0.0));
+            ending_connector_hole_T_left_1_prepare.translate(Eigen::Vector3d(0.10,0.0,0.0));
 
-            cs_T_left_1 = cs_T_ending_connector_hole * ending_connector_hole_T_left_1;
-            tf::poseEigenToMsg(cs_T_left_1, cs_T_left_1_msg);
+            cs_T_left_1_prepare = cs_T_ending_connector_hole * ending_connector_hole_T_left_1_prepare;
+            tf::poseEigenToMsg(cs_T_left_1_prepare, cs_T_left_1_prepare_msg);
 
             execution_time = 7.0;
-            ROS_INFO("[Cable Stower] Moving to left 1 pose");
-            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_left_1_msg, execution_time))
+            ROS_INFO("[Cable Stower] Moving to left 1 prepare pose (step 1).");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_left_1_prepare_msg, execution_time))
             {
                 res.success = false;
-                res.message = req.cable_stower_robot_id+" failed to move to grasp cable pose.";
+                res.message = req.cable_stower_robot_id+" failed to move to left 1 prepare pose (step 1).";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
+
+            // Cable Stower: move to left 1 prepare (step 2 - only change orientation)
+            // Set fixed rotation in world frame to avoid joint limits (check if it works in other board configurations)
+            geometry_msgs::Pose cs_initial_pose;
+            cs_initial_pose.position.x = 0.113;
+            cs_initial_pose.position.y = -0.284;
+            cs_initial_pose.position.z = 0.488;
+            cs_initial_pose.orientation.x = 1.000;
+            cs_initial_pose.orientation.y = 0.000;
+            cs_initial_pose.orientation.z = 0.000;
+            cs_initial_pose.orientation.w = 0.000;
+
+            cs_T_left_1_prepare_msg.orientation = cs_initial_pose.orientation;
+
+            execution_time = 7.0;
+            ROS_INFO("[Cable Stower] Moving to left 1 prepare pose (step 2).");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_left_1_prepare_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to move to left 1 prepare pose (step 2).";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+            // Cable Stower: move to left 1 stowing
+            geometry_msgs::Pose cs_T_left_1_stowing_msg;
+            Eigen::Affine3d base_link_T_left_1_stowing, cs_T_base_link;
+
+            base_link_T_left_1_stowing = Eigen::Affine3d::Identity();
+            // base_link_T_left_1_stowing.translate(Eigen::Vector3d(-0.137,0.087,0.069));
+            base_link_T_left_1_stowing.translate(Eigen::Vector3d(-0.151,0.094,0.082));
+            // base_link_T_left_1_stowing.rotate(Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0,0,1)));
+
+            tf::poseMsgToEigen(req.cable_stower_robot_to_base_link.pose, cs_T_base_link);
+            Eigen::Affine3d cs_T_left_1_stowing = cs_T_base_link * base_link_T_left_1_stowing;
+            tf::poseEigenToMsg(cs_T_left_1_stowing, cs_T_left_1_stowing_msg);
+
+            // Fixed orientation
+            cs_T_left_1_stowing_msg.orientation = cs_initial_pose.orientation;
+
+            execution_time = 7.0;
+            ROS_INFO("[Cable Stower] Moving to left 1 stowing pose.");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_left_1_stowing_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to left 1 stowing pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+            // Cable Stower: move to left 1 stowing down
+            geometry_msgs::Pose cs_T_left_1_stowing_down_msg;
+            Eigen::Affine3d base_link_T_left_1_stowing_down;
+
+            base_link_T_left_1_stowing_down = Eigen::Affine3d::Identity();
+            base_link_T_left_1_stowing_down.translate(Eigen::Vector3d(-0.150,0.067,0.034));
+
+            Eigen::Affine3d cs_T_left_1_stowing_down = cs_T_base_link * base_link_T_left_1_stowing_down;
+            tf::poseEigenToMsg(cs_T_left_1_stowing_down, cs_T_left_1_stowing_down_msg);
+
+            // Fixed orientation
+            cs_T_left_1_stowing_down_msg.orientation = cs_initial_pose.orientation;
+
+            execution_time = 7.0;
+            ROS_INFO("[Cable Stower] Moving to left 1 stowing down pose.");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_left_1_stowing_down_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to left 1 stowing down pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+
+
+
+
+            // res.success = true;
+            // res.message = "";
+            // return true;
+
+
+
+
+            // Cable Stower: move left to right 1
+            geometry_msgs::Pose cs_T_left_to_right_1_msg;
+            Eigen::Affine3d base_link_T_left_to_right_1;
+
+            base_link_T_left_to_right_1 = Eigen::Affine3d::Identity();
+            // base_link_T_left_to_right_1.translate(Eigen::Vector3d(-0.147,-0.140,0.034));
+            base_link_T_left_to_right_1.translate(Eigen::Vector3d(-0.147,-0.210,0.034));
+            // base_link_T_left_to_right_1.rotate(Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0,0,1)));
+
+            Eigen::Affine3d cs_T_left_to_right_1 = cs_T_base_link * base_link_T_left_to_right_1;
+            tf::poseEigenToMsg(cs_T_left_to_right_1, cs_T_left_to_right_1_msg);
+
+            // Fixed orientation
+            cs_T_left_to_right_1_msg.orientation = cs_initial_pose.orientation;
+
+            execution_time = 7.0;
+            ROS_INFO("[Cable Stower] Moving left to right 1 pose.");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_left_to_right_1_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to move left to right 1 pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+
+
+            // TEST THIS
+
+
+
+
+            // Cable Stower: move to right 1 stowing
+            geometry_msgs::Pose cs_T_right_1_stowing_msg;
+            Eigen::Affine3d base_link_T_right_1_stowing;
+
+            base_link_T_right_1_stowing = Eigen::Affine3d::Identity();
+            // base_link_T_right_1_stowing.translate(Eigen::Vector3d(-0.096,-0.088,0.128));
+
+
+
+            // problem
+            base_link_T_right_1_stowing.translate(Eigen::Vector3d(-0.147,-0.210,0.18));
+
+
+
+
+
+
+            // base_link_T_right_1_stowing.rotate(Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0,0,1)));
+
+            Eigen::Affine3d cs_T_right_1_stowing = cs_T_base_link * base_link_T_right_1_stowing;
+            tf::poseEigenToMsg(cs_T_right_1_stowing, cs_T_right_1_stowing_msg);
+
+            // Fixed orientation
+            cs_T_right_1_stowing_msg.orientation = cs_initial_pose.orientation;
+
+            execution_time = 7.0;
+            ROS_INFO("[Cable Stower] Moving to right 1 stowing pose.");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_right_1_stowing_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to move to right 1 stowing pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+            // Cable Stower: move right to left 1
+            geometry_msgs::Pose cs_T_right_to_left_1_msg;
+            Eigen::Affine3d base_link_T_right_to_left_1;
+
+            base_link_T_right_to_left_1 = Eigen::Affine3d::Identity();
+            base_link_T_right_to_left_1.translate(Eigen::Vector3d(-0.087,0.131,0.124));
+            // base_link_T_right_to_left_1.rotate(Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0,0,1)));
+
+            Eigen::Affine3d cs_T_right_to_left_1 = cs_T_base_link * base_link_T_right_to_left_1;
+            tf::poseEigenToMsg(cs_T_right_to_left_1, cs_T_right_to_left_1_msg);
+
+            // Fixed orientation
+            cs_T_right_to_left_1_msg.orientation = cs_initial_pose.orientation;
+
+            execution_time = 7.0;
+            ROS_INFO("[Cable Stower] Moving right to left 1 pose.");
+            if(!cable_stower_robot_traj_helper_->moveToTargetPoseAndWait(cs_T_right_to_left_1_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.cable_stower_robot_id+" failed to move right to left 1 pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+
+
 
             res.success = true;
             res.message = "";
