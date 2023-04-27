@@ -53,13 +53,6 @@ class HomingFSM
                 return false;
             }
 
-            //Wait until the controller_started param is found
-            // ROS_WARN("Waiting for controller to start...");
-            // do{
-            //     ros::Duration(0.5).sleep();
-            // }while(!HRII_Utils::getParamSuccess(req.robot_id+"controller_started"));
-            // ROS_INFO("Controller started.");
-
             // Trajectory helper declaration and initialization
             traj_helper_ = std::make_shared<HRII::TrajectoryHelper>("/"+req.robot_id+"/trajectory_handler");
             if (!traj_helper_->init()) return false;
@@ -67,12 +60,11 @@ class HomingFSM
             ROS_INFO("Trajectory handler client initialized.");
 
             // Initialize gripper and close it
-            // gripper_ = std::make_shared<GripperInterfaceClientHelper>(req.robot_id+"trajectory_handler/execute_trajectory");
-            // if (!gripper_->init()) return false;
-            // if (!gripper_->close(default_closing_gripper_speed_)) return false;
-            // ROS_INFO("Gripper client initialized.");
+            gripper_ = std::make_shared<GripperInterfaceClientHelper>("/"+req.robot_id+"/gripper");
+            if (!gripper_->init()) return false;
+            if (!gripper_->close(default_closing_gripper_speed_)) return false;
+            ROS_INFO("Gripper client initialized.");
             
-
             std::vector<geometry_msgs::Pose> waypoints;
             double execution_time = 5.0;
 
@@ -90,8 +82,6 @@ class HomingFSM
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
-
-            // ros::Duration(5).sleep();
 
             res.success = true;
             res.message = "";
