@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sim" default="false"/>
+    <arg name="left_robot_id" default="franka_left" />
+    <arg name="right_robot_id" default="franka_right" />
+
+    <arg name="left_gripper_launch" default="true" />
+    <arg name="right_gripper_launch" default="true" />
+
+    <arg name="gripper_brand" default="franka_gripper"/>
+    <arg name="gripper_config_file" default="$(find hrii_franka_gripper_interface)/config/franka_gripper.yaml"/>
+    <arg name="gripper_mass" default="0.760"/>
+
+
+    <!-- Load left gripper interface -->
+    <group ns="$(arg left_robot_id)" if="$(arg left_gripper_launch)">
+        <include file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
+            <arg name="launch_gripper" value="franka_gripper_and_realsense_d435"/>
+            <arg name="F_T_NE" value="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.137 1"/>
+            <arg name="launch_rviz" value="false"/>
+            <arg name="launch_gazebo_world" value="false"/>
+            <arg name="arm_prefix" value="$(arg left_robot_id)"/>
+            <arg name="interface_type" value="SIMULATION" if="$(arg sim)"/>
+            <arg name="interface_type" value="HARDWARE" unless="$(arg sim)"/>
+            <arg name="gripper_ip" value="192.168.0.102"/>
+        </include>
+    </group>
+
+    <!-- Load right gripper interface -->
+    <group ns="$(arg right_robot_id)" if="$(arg right_gripper_launch)">
+        <include file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
+            <arg name="launch_gripper" value="franka_gripper"/>
+            <arg name="F_T_NE" value="0.7071 -0.7071 0 0 0.7071 0.7071 0 0 0 0 1 0 0 0 0.133 1"/>
+            <arg name="launch_rviz" value="false"/>
+            <arg name="launch_gazebo_world" value="false"/>
+            <arg name="arm_prefix" value="$(arg right_robot_id)"/>
+            <arg name="interface_type" value="SIMULATION" if="$(arg sim)"/>
+            <arg name="interface_type" value="HARDWARE" unless="$(arg sim)"/>
+            <arg name="gripper_ip" value="192.168.0.101"/>
+        </include>
+    </group>
+
+</launch>

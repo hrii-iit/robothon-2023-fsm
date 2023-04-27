@@ -120,7 +120,7 @@
     </node>
 
     <!-- Load gripper interface -->
-    <include file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
+    <include unless="$(arg grippers_independent_launch)" file="$(find hrii_gri_interface)/launch/generic_gripper.launch" pass_all_args="true">
         <arg name="launch_rviz" value="false"/>
         <arg name="launch_gazebo_world" value="false"/>
         <arg name="arm_prefix" value="$(arg arm_id)"/>
