@@ -158,6 +158,18 @@ class MovePlugFSM
 
 
             ROS_ERROR("HERE PERFORM ROTATION: NEEDED FOR BETTER STOWING CABLE!");
+            // Move to real ending pose (with rotation)
+            // ending_pose = req.ending_plug_pose.pose;
+            // waypoints.push_back(ending_pose);
+
+            // ROS_INFO("Moving to real ending pose (with rotation). Needed for better stowing cable later...");
+            // if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true)) // true, only one point
+            // {
+            //     res.success = false;
+            //     res.message = req.robot_id+" failed to reach real ending pose (with rotation).";
+            //     ROS_ERROR_STREAM(res.message);
+            //     return true;
+            // }
 
             // Gripper opening
             if (!gripper_->setWidth(default_closing_gripper_speed_,0.03)) return false;
@@ -167,7 +179,8 @@ class MovePlugFSM
             waypoints.push_back(ending_pose);
 
             ROS_INFO("Moving to up pose.");
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true)); // Put to false if rotation in prev step enabled
+            // if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the up pose.";
