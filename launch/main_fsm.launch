@@ -26,7 +26,6 @@
     <arg name="task_board_init_pose_pitch" default="0.0"/>
     <arg name="task_board_init_pose_yaw" default="0.0"/>
 
-
     <arg name="task_board_init_pose_x" default="0.0578"/> <!-- +3mm -->
     <arg name="task_board_init_pose_y" default="-0.0268"/> <!-- +1mm -->
     <arg name="task_board_init_pose_z" default="0.010"/>
@@ -39,7 +38,8 @@
     <arg name="left_robot_launch" default="true"/>
     <arg name="right_robot_launch" default="true"/>
     <arg name="grippers_independent_launch" default="true"/>
-
+    <arg name="grippers_independent_launch" default="true"/>
+    
     <!-- Left robot arguments -->
     <arg name="left_robot_id" default="franka_left"/>
     <arg name="left_robot_ip" default="192.168.0.102"/>
@@ -81,6 +81,11 @@
     <arg name="right_robot_init_pose_z" default="0"/> <!-- in real world it is -0.007 -->
     <arg name="right_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/controllers/franka_right_cart_hybrid_motion_force_controller.yaml"/>
     <arg name="right_robot_launch_interactive_marker" default="false"/>
+
+    <arg name="reference_frame" default="world"/>
+    <arg if="$(eval left_robot_launch and right_robot_launch)" name="available_robots" default="[$(arg right_robot_id),$(arg left_robot_id)]"/>
+    <arg if="$(arg right_robot_launch)" name="available_robots" default="[$(arg right_robot_id)]"/>
+    <arg if="$(arg left_robot_launch)" name="available_robots" default="[$(arg left_robot_id)]"/>
 
     <!-- Launch left robot -->
     <group ns="$(arg left_robot_id)" if="$(arg left_robot_launch)">
@@ -148,7 +153,7 @@
                 $(arg task_board_init_pose_yaw)
                 $(arg task_board_init_pose_pitch)
                 $(arg task_board_init_pose_roll)
-                world task_board_base_link"/>
+                $(arg reference_frame) task_board_base_link"/>
 
     <!-- Launch task board URDF -->
     <include file="$(find hrii_gazebo_utils)/launch/spawn_urdf.launch">
@@ -180,6 +185,11 @@
         <node pkg="hrii_task_board_fsm" type="open_door_fsm" name="open_door_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="probe_circuit_fsm" name="probe_circuit_fsm" output="screen" respawn="false"/>
         <node pkg="hrii_task_board_fsm" type="stow_probe_cable_fsm" name="stow_probe_cable_fsm" output="screen" respawn="false"/>
+        
+        <node pkg="hrii_task_board_fsm" type="task_manager.py" name="task_manager" output="screen" respawn="false">
+            <rosparam param="available_robots" subst_value="True">$(arg available_robots)</rosparam> 
+            <param name="reference_frame" value="$(arg reference_frame)"/>
+        </node>
         
     </group>
 
