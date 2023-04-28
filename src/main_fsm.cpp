@@ -389,6 +389,7 @@ class MainFSM
             geometry_msgs::TransformStamped blueButtonTransform;
             try{
                 blueButtonTransform = tf_buffer_.lookupTransform(press_button_srv.request.robot_id+"_link0", "task_board_blue_button_link", ros::Time(0), ros::Duration(3));
+                // blueButtonTransform = tf_buffer_.lookupTransform(press_button_srv.request.robot_id+"_link0", "task_board_probe_link", ros::Time(0), ros::Duration(3));
                 ROS_INFO_STREAM("Tranform btw " << press_button_srv.request.robot_id << "_link0 and task_board_blue_button_link found!");
             }
             catch (tf2::TransformException &ex) 

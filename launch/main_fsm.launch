@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Simulation arguments -->
-    <arg name="sim" default="true" doc="If true, launch the gazebo simulation" />
+    <arg name="sim" default="false" doc="If true, launch the gazebo simulation" />
     <arg name="sim_headless" default="false" doc="If true, launch with no Gazebo GUI" />
     <arg name="gazebo_world" default="$(find gazebo_ros)/worlds/empty_world.world"/>
 
@@ -15,12 +15,25 @@
 
     <!-- Task board arguments -->
     <arg name="task_board_publish_manual_tf" default="$(arg sim)"/>
-    <arg name="task_board_init_pose_x" default="0.054"/>
-    <arg name="task_board_init_pose_y" default="-0.03"/>
-    <arg name="task_board_init_pose_z" default="0.01"/>
+    <!-- <arg name="task_board_init_pose_x" default="0.054"/> -->
+    <!-- <arg name="task_board_init_pose_y" default="-0.03"/> -->
+    <!-- <arg name="task_board_init_pose_z" default="0.01"/> -->
+    
+    <arg name="task_board_init_pose_x" default="0.0517"/> 
+    <arg name="task_board_init_pose_y" default="-0.0335"/>
+    <arg name="task_board_init_pose_z" default="0.010"/>
     <arg name="task_board_init_pose_roll" default="0.0"/>
     <arg name="task_board_init_pose_pitch" default="0.0"/>
     <arg name="task_board_init_pose_yaw" default="0.0"/>
+
+
+    <arg name="task_board_init_pose_x" default="0.0578"/> <!-- +3mm -->
+    <arg name="task_board_init_pose_y" default="-0.0268"/> <!-- +1mm -->
+    <arg name="task_board_init_pose_z" default="0.010"/>
+    <arg name="task_board_init_pose_roll" default="0.0"/>
+    <arg name="task_board_init_pose_pitch" default="0.0"/>
+    <!-- <arg name="task_board_init_pose_yaw" default="0.028"/> 1.6 deg -->
+    <arg name="task_board_init_pose_yaw" default="0.017"/> <!-- 1.0 deg -->
 
     <!-- Robot selection -->
     <arg name="left_robot_launch" default="true"/>

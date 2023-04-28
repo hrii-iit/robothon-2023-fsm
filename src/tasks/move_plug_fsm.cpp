@@ -57,6 +57,12 @@ class MovePlugFSM
 
             geometry_msgs::Pose ending_pose, ending_approach_pose;
             ending_pose = req.ending_plug_pose.pose;
+
+
+            // Trying to keep same orientation
+            ending_pose.orientation = starting_pose.orientation;
+
+
             ending_approach_pose = ending_pose;
             ending_approach_pose.position.z += 0.02;
 
@@ -73,11 +79,12 @@ class MovePlugFSM
 
             // Gripper opening
             if (!gripper_->open(default_closing_gripper_speed_)) return false;
-            waypoints.push_back(starting_pose);
 
             // Move to starting pose
+            waypoints.push_back(starting_pose);
             execution_time = 1.0;
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to starting pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the starting move plug pose.";
@@ -94,10 +101,11 @@ class MovePlugFSM
             waypoints.push_back(starting_approach_pose);
             execution_time = 2.0;
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to starting approach pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the ending approach pose.";
+                res.message = req.robot_id+" failed to reach the starting approach pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
@@ -108,7 +116,8 @@ class MovePlugFSM
             waypoints.push_back(ending_approach_pose);
             execution_time = 1.5;
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to ending approach pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the ending approach pose.";
@@ -117,15 +126,16 @@ class MovePlugFSM
             }
             waypoints.erase(waypoints.begin());
 
-            // Move the robot to the ending hole connector approaching pose
+            // Move the robot to the ending hole connector approaching pose  (step 2)
             ending_approach_pose.position.z-=0.007;
             waypoints.push_back(ending_approach_pose);
             execution_time = 1.0;
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to ending approach pose (step 2).");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the ending approach pose.";
+                res.message = req.robot_id+" failed to reach the ending approach pose (step 2).";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
@@ -146,6 +156,9 @@ class MovePlugFSM
             }
             waypoints.erase(waypoints.begin());
 
+
+            ROS_ERROR("HERE PERFORM ROTATION: NEEDED FOR BETTER STOWING CABLE!");
+
             // Gripper opening
             if (!gripper_->setWidth(default_closing_gripper_speed_,0.03)) return false;
 
@@ -153,10 +166,11 @@ class MovePlugFSM
             ending_pose.position.z+=0.050;
             waypoints.push_back(ending_pose);
 
+            ROS_INFO("Moving to up pose.");
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the ending move plug pose.";
+                res.message = req.robot_id+" failed to reach the up pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
