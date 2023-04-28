@@ -66,10 +66,11 @@ class MoveSliderFSM
             slider_homing_pose.orientation.w = 0.000;
             waypoints.push_back(slider_homing_pose);
 
+            ROS_INFO("Moving to slider homing pose.");
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {   
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the first approaching slider pose.";
+                res.message = req.robot_id+" failed to reach the slider homing pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
@@ -77,27 +78,29 @@ class MoveSliderFSM
             // Move to an approach pose upon the slider 
             slider_pose = req.slider_pose.pose;
             approach_pose = slider_pose;
-            approach_pose.position.z += 0.02;
+            approach_pose.position.z += 0.021;
             waypoints.push_back(approach_pose);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to approach slider pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {   
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the first approaching slider pose.";
+                res.message = req.robot_id+" failed to reach the approach slider pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
             waypoints.erase(waypoints.begin());
 
             // Move to the slider pose
-            slider_pose.position.z -= 0.002;
+            slider_pose.position.z -= 0.001;
             waypoints.push_back(slider_pose);
-            execution_time = 1.5;
+            execution_time = 1.0;
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to slider pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to grasp the slider.";
+                res.message = req.robot_id+" failed to reach the slider pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
@@ -171,7 +174,7 @@ class MoveSliderFSM
                 }
                 waypoints.erase(waypoints.begin());
 
-                // Temporary sleep to wait for vision unit, maybe remove in the future
+                ROS_ERROR_STREAM("Temporary sleep to wait for vision unit, maybe remove in the future");
                 ros::Duration(0.5).sleep();
 
                 // Check if task is accomplished or get new displacement
@@ -189,7 +192,7 @@ class MoveSliderFSM
             // Move to slider homing pose to avoid joint limits
             waypoints.push_back(slider_homing_pose);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {   
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the first approaching slider pose.";

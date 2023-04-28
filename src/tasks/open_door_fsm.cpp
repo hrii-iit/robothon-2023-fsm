@@ -10,7 +10,7 @@ class OpenDoorFSM
         OpenDoorFSM(ros::NodeHandle& nh) : 
             nh_(nh),
             default_closing_gripper_speed_(10),
-            default_grasping_gripper_force_(5.0),
+            default_grasping_gripper_force_(1.0),
             controller_desired_pose_topic_name_("cart_hybrid_motion_force_controller/desired_tool_pose")
         {
             activation_server_ = nh_.advertiseService("activate", &OpenDoorFSM::activationCallback, this);
@@ -62,6 +62,7 @@ class OpenDoorFSM
             approach_door_handle_pose.position.z += 0.1;
             waypoints.push_back(approach_door_handle_pose);
 
+            ROS_INFO("Moving to approach pose.");
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
                 res.success = false;
@@ -69,12 +70,12 @@ class OpenDoorFSM
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
-            waypoints.erase(waypoints.begin());
 
             // Move to door handle pose
             waypoints.push_back(door_handle_pose);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to door handle pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the door handle pose.";
@@ -139,6 +140,10 @@ class OpenDoorFSM
                 loop_rate.sleep();
             }
 
+            // Delete previous point and add last commanded pose
+            waypoints.erase(waypoints.begin());
+            waypoints.push_back(w_T_desired_pose_msg.pose);
+
             // Opening gripper
             ROS_WARN_STREAM("This command (gripper opening) fails many times..");
             if (!gripper_->open(default_closing_gripper_speed_)) ROS_WARN("Gripper: open failed...");
@@ -147,7 +152,8 @@ class OpenDoorFSM
             w_T_desired_pose_msg.pose.position.z += 0.04;
             waypoints.push_back(w_T_desired_pose_msg.pose);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving above last commanded pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
                 res.message = req.robot_id+" failed to reach the approach pose.";
@@ -159,7 +165,7 @@ class OpenDoorFSM
             // Compute and move to opened door pushing start
             Eigen::Affine3d door_handle_T_door_pushing_start;
             door_handle_T_door_pushing_start = Eigen::Affine3d::Identity();
-            door_handle_T_door_pushing_start.translation()[0] = 0.05;
+            door_handle_T_door_pushing_start.translation()[0] = 0.02; // 0.05
             door_handle_T_door_pushing_start.translation()[2] = -0.095;
 
             Eigen::Affine3d w_T_door_pushing_start = w_T_door_handle * door_handle_T_door_pushing_start;
@@ -175,10 +181,11 @@ class OpenDoorFSM
 
             waypoints.push_back(w_T_door_pushing_start_msg.pose);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to door pushing start (above) pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the approach pose.";
+                res.message = req.robot_id+" failed to reach door pushing start (above) pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
@@ -199,10 +206,11 @@ class OpenDoorFSM
 
             waypoints.push_back(w_T_door_pushing_start_msg.pose);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to door pushing start pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the approach pose.";
+                res.message = req.robot_id+" failed to reach door pushing start pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
@@ -211,7 +219,7 @@ class OpenDoorFSM
             // Compute and move to opened door pushing end
             Eigen::Affine3d door_pushing_start_T_door_pushing_end;
             door_pushing_start_T_door_pushing_end = Eigen::Affine3d::Identity();
-            door_pushing_start_T_door_pushing_end.translation()[0] = 0.06;
+            door_pushing_start_T_door_pushing_end.translation()[0] = 0.09;
 
             Eigen::Affine3d w_T_door_pushing_end = w_T_door_pushing_start * door_pushing_start_T_door_pushing_end;
 
@@ -222,10 +230,11 @@ class OpenDoorFSM
 
             waypoints.push_back(w_T_door_pushing_end_msg.pose);
 
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
+            ROS_INFO("Moving to opened door pushing pose.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the approach pose.";
+                res.message = req.robot_id+" failed to reach opened door pushing pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }

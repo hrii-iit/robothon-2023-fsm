@@ -82,20 +82,22 @@ class PressButtonFSM
 
             // Move to an approach pose w.r.t. the world frame
             geometry_msgs::Pose approach_pose = req.button_pose.pose;
-            approach_pose.position.z += 0.02;
+            // approach_pose.position.z += 0.02;
+            approach_pose.position.z = 0.110; // absolute
 
             waypoints.push_back(approach_pose);
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the approach pose.";
+                res.message = req.robot_id+" failed to reach the first approach pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }
 
             // Move to an approach pose w.r.t. the world frame
-            approach_pose.position.z -= 0.015;
+            // approach_pose.position.z -= 0.015;
+            approach_pose.position.z = 0.098; // absolute
             execution_time = 1.0;
 
             waypoints.erase(waypoints.begin());
@@ -104,7 +106,7 @@ class PressButtonFSM
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
                 res.success = false;
-                res.message = req.robot_id+" failed to reach the approach pose.";
+                res.message = req.robot_id+" failed to reach the second approach pose.";
                 ROS_ERROR_STREAM(res.message);
                 return true;
             }

@@ -141,43 +141,42 @@ class ProbeCircuitFSM
                 return true;
             }
 
-            // tmp avoiding probing
-            // // Approach circuit pose
-            // desired_pose_msg = req.circuit_pose.pose;
-            // desired_pose_msg.position.z += 0.04;
-            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to extract the handle.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            // Approach circuit pose
+            desired_pose_msg = req.circuit_pose.pose;
+            desired_pose_msg.position.z += 0.04;
+            if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to extract the handle.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
 
-            // // Switch to task force in Z-axis
-            // geometry_msgs::WrenchStamped desired_wrench;
-            // desired_wrench.header.stamp = ros::Time::now();
-            // desired_wrench.wrench.force.z = desired_contact_force_;
-            // // desired_wrench.wrench.force.z = 0.0;
+            // Switch to task force in Z-axis
+            geometry_msgs::WrenchStamped desired_wrench;
+            desired_wrench.header.stamp = ros::Time::now();
+            desired_wrench.wrench.force.z = desired_contact_force_;
+            // desired_wrench.wrench.force.z = 0.0;
 
-            // if (!applyContactForce(nh_, req.robot_id,
-            //                 "cart_hybrid_motion_force_controller",
-            //                 hrii_robot_msgs::TaskSelection::Request::Z_LIN,
-            //                 desired_wrench))
-            // {
-            //     ROS_ERROR_STREAM("Contact force application failed.");
-            //     return false;
-            // }
+            if (!applyContactForce(nh_, req.robot_id,
+                            "cart_hybrid_motion_force_controller",
+                            hrii_robot_msgs::TaskSelection::Request::Z_LIN,
+                            desired_wrench))
+            {
+                ROS_ERROR_STREAM("Contact force application failed.");
+                return false;
+            }
 
-            // // Move to approach pose
-            // desired_pose_msg = req.circuit_pose.pose;
-            // desired_pose_msg.position.z += 0.15;
-            // if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
-            // {
-            //     res.success = false;
-            //     res.message = req.robot_id+" failed to extract the handle.";
-            //     ROS_ERROR_STREAM(res.message);
-            //     return true;
-            // }
+            // Move to approach pose
+            desired_pose_msg = req.circuit_pose.pose;
+            desired_pose_msg.position.z += 0.15;
+            if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to extract the handle.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
 
             // Task frame back to original one
             hrii_robot_msgs::SetPose original_EE_T_task_frame_srv;
