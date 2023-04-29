@@ -38,7 +38,11 @@ class TaskManager:
         
         elif req.task_name == AssignTaskRequest.PROBE:
             task_rpy = gmo.get_rpy(req.task_pose.orientation)
-            rospy.loginfo("Task orientation:"+str(task_rpy[2]))
+            task_orientation = task_rpy[0] - 3.14159
+            if task_orientation < 0:
+                task_orientation += 2*3.14159
+            rospy.loginfo("Task orientation x (rad):"+str(task_orientation))
+            rospy.loginfo("Task orientation x (deg):"+str(task_orientation*180/3.14159))
 
             for robot in self.available_robots:
                 rospy.loginfo("Candidate: "+robot)
@@ -46,7 +50,7 @@ class TaskManager:
                 rpy = gmo.get_rpy(pose.orientation)
                 rospy.loginfo("Robot orientation:"+str(rpy[2]))
                 
-                if abs(rpy[2] - task_rpy[2]) < 3.1415:
+                if abs(task_orientation - rpy[2]) < 1.5707 or abs(task_orientation - rpy[2]) > 4.71238:
                     res.robot_id = robot
                     res.success = True
                     res.message = "Task: "+req.task_name+" assigned to "+res.robot_id
