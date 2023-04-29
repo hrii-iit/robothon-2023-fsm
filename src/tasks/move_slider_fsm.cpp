@@ -186,8 +186,8 @@ class MoveSliderFSM
             }
 
             ROS_INFO("Move slide task accomplished, opening gripper.");
-            double opening_gripper_speed = 1.0;
-            if (!gripper_->open(opening_gripper_speed)) return false;
+            double opening_gripper_speed = 10.0;
+            if (!gripper_->setWidth(opening_gripper_speed,0.02)) return false;
 
             // Move to slider homing pose to avoid joint limits
             waypoints.push_back(slider_homing_pose);

@@ -10,7 +10,7 @@ class OpenDoorFSM
         OpenDoorFSM(ros::NodeHandle& nh) : 
             nh_(nh),
             default_closing_gripper_speed_(10),
-            default_grasping_gripper_force_(1.0),
+            default_grasping_gripper_force_(10.0),
             controller_desired_pose_topic_name_("cart_hybrid_motion_force_controller/desired_tool_pose")
         {
             activation_server_ = nh_.advertiseService("activate", &OpenDoorFSM::activationCallback, this);
@@ -72,7 +72,11 @@ class OpenDoorFSM
             }
 
             // Move to door handle pose
-            waypoints.push_back(door_handle_pose);
+            geometry_msgs::Pose temp_pose;
+            temp_pose = door_handle_pose;
+            temp_pose.position.z -= 0.002;
+            waypoints.push_back(temp_pose);
+            execution_time = 1.0;
 
             ROS_INFO("Moving to door handle pose.");
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
@@ -116,7 +120,7 @@ class OpenDoorFSM
                 double desired_angle = t_interp * req.final_desired_angle;
                 ROS_INFO_STREAM_THROTTLE(1, "Desired angle: " << desired_angle << "/" << req.final_desired_angle);
 
-                // Compute desired pose
+                // Compute desired position
                 Eigen::Quaterniond center_of_rotation_T_desired_angle_quat = 
                     Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX())*
                     Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY())*
@@ -129,8 +133,22 @@ class OpenDoorFSM
 
                 tf::poseEigenToMsg(w_T_desired_pose, w_T_desired_pose_msg.pose);
 
+                // Compute desired orientation
+                Eigen::Quaterniond center_of_rotation_T_desired_angle_quat_orient = 
+                    Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX())*
+                    Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY())*
+                    Eigen::AngleAxisd(desired_angle*4/9, Eigen::Vector3d::UnitZ());
+                Eigen::Affine3d center_of_rotation_T_desired_angle_pose_orient;
+                center_of_rotation_T_desired_angle_pose_orient = Eigen::Affine3d::Identity();
+                center_of_rotation_T_desired_angle_pose_orient.linear() = center_of_rotation_T_desired_angle_quat_orient.matrix();
+
+                Eigen::Affine3d w_T_desired_orientation = w_T_center_of_rotation * center_of_rotation_T_desired_angle_pose_orient * init_center_of_rotation_T_door_handle;
+                geometry_msgs::PoseStamped w_T_desired_orientation_pose;
+                tf::poseEigenToMsg(w_T_desired_orientation, w_T_desired_orientation_pose.pose);
+                w_T_desired_pose_msg.pose.orientation = w_T_desired_orientation_pose.pose.orientation;
+
                 // Keeping orientation fixed to avoid joint limits
-                w_T_desired_pose_msg.pose.orientation = door_handle_pose.orientation;
+                // w_T_desired_pose_msg.pose.orientation = door_handle_pose.orientation;
 
                 w_T_desired_pose_msg.header.stamp = ros::Time::now();
                 w_T_desired_pose_msg.header.frame_id=req.robot_id+"_link0";
@@ -142,7 +160,40 @@ class OpenDoorFSM
 
             // Delete previous point and add last commanded pose
             waypoints.erase(waypoints.begin());
+            
+
+            // Continue straight motion
+            // Eigen::Quaterniond quat(slider_pose.orientation.w, slider_pose.orientation.x, slider_pose.orientation.y, slider_pose.orientation.z);
+            // Eigen::Matrix3d displacement_transformation_rot_matrix = quat.toRotationMatrix();
+            ROS_INFO_STREAM("Rotation matrix between franka_left_link0 and board slider: " << w_T_center_of_rotation.linear());
+
+            Eigen::Vector3d displacement_vector(0.013, 0, 0);
+            //ROS_INFO_STREAM("Displacement along slider y-axis in Vector3:" << displacement_vector);
+
+            // Displacement vector in robot_base RF
+            displacement_vector =  w_T_center_of_rotation.linear() * displacement_vector;
+            ROS_INFO_STREAM("First displacement respect robot frame: " << displacement_vector);
+
+            // Pose of the reference point where we have to move the slider
+            geometry_msgs::Pose reference_pose;
+            reference_pose.position = w_T_desired_pose_msg.pose.position; //we assign to the first reference point the same initial pose of the slider
+            reference_pose.position.x += displacement_vector(0);      //then we add the computed displacement along each axes wrt robot RF
+            reference_pose.position.y += displacement_vector(1);
+            reference_pose.position.z += displacement_vector(2);          
+            reference_pose.orientation = w_T_desired_pose_msg.pose.orientation;     //we assing the same rotation of the slider
+            
             waypoints.push_back(w_T_desired_pose_msg.pose);
+            waypoints.push_back(reference_pose);
+
+            ROS_INFO("Continue motion straight.");
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
+            {
+                res.success = false;
+                res.message = req.robot_id+" failed to reach the continue motion pose.";
+                ROS_ERROR_STREAM(res.message);
+                return true;
+            }
+            waypoints.erase(waypoints.begin());
 
             // Opening gripper
             ROS_WARN_STREAM("This command (gripper opening) fails many times..");

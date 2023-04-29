@@ -8,6 +8,7 @@
 #include "hrii_robothon_msgs/OpenDoor.h"
 #include "hrii_robothon_msgs/ProbeCircuit.h"
 #include "hrii_robothon_msgs/StowProbeCable.h"
+#include "hrii_robothon_msgs/AssignTask.h"
 
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -18,7 +19,7 @@
 class MainFSM
 {
     public:
-        MainFSM() : nh_priv_("~"), tf_listener_{tf_buffer_}
+        MainFSM() : nh_priv_("~"), tf_listener_{tf_buffer_}, prev_robot_id_("")
         {
             homing_service_name_ = "homing_fsm/activate";
             homing_client_ = nh_.serviceClient<hrii_robothon_msgs::Homing>(homing_service_name_);
@@ -43,6 +44,9 @@ class MainFSM
 
             stow_probe_cable_activation_service_name_ = "stow_probe_cable_fsm/activate";
             stow_probe_cable_activation_client_ = nh_.serviceClient<hrii_robothon_msgs::StowProbeCable>(stow_probe_cable_activation_service_name_);
+    
+            assign_task_service_name_ = "task_manager/assign_task";
+            assign_task_client_ = nh_.serviceClient<hrii_robothon_msgs::AssignTask>(assign_task_service_name_);
 
         }
 
@@ -224,6 +228,7 @@ class MainFSM
 
         std::vector<std::string> task_order_;
         int task_cnt_;
+        std::string prev_robot_id_;
         
         std::string left_robot_controller_manager_status_service_name_;
         ros::ServiceClient left_robot_controller_manager_status_client_;
@@ -254,6 +259,9 @@ class MainFSM
 
         std::string stow_probe_cable_activation_service_name_;
         ros::ServiceClient stow_probe_cable_activation_client_;
+
+        std::string assign_task_service_name_;
+        ros::ServiceClient assign_task_client_;
         
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;
@@ -289,7 +297,8 @@ class MainFSM
 
             // Define homing pose
             homing_pose.position.x = 0.351;
-            homing_pose.position.y = -0.233;
+            // homing_pose.position.y = -0.233;
+            homing_pose.position.y = 0.040; //new homing to avoid collision
             homing_pose.position.z = 0.441;
             homing_pose.orientation.x = -0.693;
             homing_pose.orientation.y = 0.706;
@@ -358,6 +367,7 @@ class MainFSM
 
             hrii_robothon_msgs::BoardDetection board_detection_srv;
             board_detection_srv.request.robot_id = left_robot_id_;
+            prev_robot_id_ = left_robot_id_;
             board_detection_srv.request.homing_pose.pose = homing_pose;
 
             if (!board_detection_activation_client_.call(board_detection_srv))
@@ -383,7 +393,9 @@ class MainFSM
             press_button_activation_client_.waitForExistence();
 
             hrii_robothon_msgs::PressButton press_button_srv;
-            press_button_srv.request.robot_id = left_robot_id_;
+            press_button_srv.request.robot_id = left_robot_id_; //UNCOMMENT
+            // press_button_srv.request.robot_id = right_robot_id_;
+            prev_robot_id_ = left_robot_id_;
 
             // Real button pose
             geometry_msgs::TransformStamped blueButtonTransform;
@@ -440,7 +452,12 @@ class MainFSM
             press_button_activation_client_.waitForExistence();
 
             hrii_robothon_msgs::PressButton press_button_srv;
+            if (prev_robot_id_.compare(right_robot_id_) == 0)
+            {
+                if (!otherHoming()) return false;
+            } 
             press_button_srv.request.robot_id = left_robot_id_;
+            prev_robot_id_ = left_robot_id_;
 
             // Real button pose
             geometry_msgs::TransformStamped redButtonTransform;
@@ -492,6 +509,7 @@ class MainFSM
 
             hrii_robothon_msgs::MoveSlider move_slider_srv;
             move_slider_srv.request.robot_id = left_robot_id_;
+            prev_robot_id_ = left_robot_id_;
             
             // Real slider pose
             geometry_msgs::TransformStamped sliderTransform;
@@ -534,7 +552,57 @@ class MainFSM
             move_plug_activation_client_.waitForExistence();
 
             hrii_robothon_msgs::MovePlug move_plug_srv;
-            move_plug_srv.request.robot_id = left_robot_id_;
+            // move_plug_srv.request.robot_id = left_robot_id_; // now done by task manager
+
+
+            // Look up task pose w.r.t. world frame
+            geometry_msgs::TransformStamped w_T_black_hole_transf;
+            try{
+                w_T_black_hole_transf = tf_buffer_.lookupTransform("world", "task_board_starting_connector_hole_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw world and task_board_starting_connector_hole_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw world and task_board_starting_connector_hole_link NOT found!");
+            }
+            geometry_msgs::Pose w_T_black_hole_pose = geometry_msgs::toPose(w_T_black_hole_transf.transform);
+
+
+
+            // Call task manager to assign task
+            hrii_robothon_msgs::AssignTask assign_task_srv;
+            assign_task_srv.request.task_name = hrii_robothon_msgs::AssignTask::Request::MOVE_PLUG_CABLE;
+            assign_task_srv.request.task_pose = w_T_black_hole_pose;
+
+            if (!assign_task_client_.call(assign_task_srv))
+            {
+                ROS_ERROR("Error calling assign task service.");
+                return false;
+            }
+            else if (!assign_task_srv.response.success)
+            {
+                ROS_ERROR("Failure assigning task. Exiting.");
+                ROS_ERROR_STREAM(assign_task_srv.response.message);
+                return false;
+            }
+            ROS_INFO_STREAM(assign_task_srv.response.message);
+            
+            move_plug_srv.request.robot_id = assign_task_srv.response.robot_id;
+
+            ROS_INFO_STREAM("Previous robot used:" << prev_robot_id_);
+            if (prev_robot_id_.compare(move_plug_srv.request.robot_id) != 0)
+            {
+                if (prev_robot_id_.compare(left_robot_id_) == 0)
+                {
+                    if (!homing()) return false;
+                }
+                else if (prev_robot_id_.compare(right_robot_id_) == 0)
+                {
+                    if (!otherHoming()) return false;
+                }
+            }
+            prev_robot_id_ = move_plug_srv.request.robot_id;
 
             // ----------------------------- LOOKING FOR THE POSITION OF THE STARTING CONNECTOR HOLE -----------------------------
 
@@ -560,6 +628,10 @@ class MainFSM
             ROS_INFO_STREAM("Starting connector hole orientation: " << starting_connector_hole_pose.orientation.x << ", " << starting_connector_hole_pose.orientation.y << ", " << starting_connector_hole_pose.orientation.z << ", " << starting_connector_hole_pose.orientation.w);
 
             move_plug_srv.request.starting_plug_pose.pose = starting_connector_hole_pose;
+
+
+
+            
 
             // ----------------------------- LOOKING FOR THE POSITION OF THE ENDING CONNECTOR HOLE -----------------------------
 
@@ -607,8 +679,61 @@ class MainFSM
             ROS_INFO_STREAM("Waiting for " << nh_.resolveName(open_door_activation_service_name_) << " ROS service...");
             open_door_activation_client_.waitForExistence();
 
+
             hrii_robothon_msgs::OpenDoor open_door_srv;
-            open_door_srv.request.robot_id = left_robot_id_;
+            // open_door_srv.request.robot_id = left_robot_id_; // now done by task manager
+
+            // Look up task pose w.r.t. world frame
+            geometry_msgs::TransformStamped w_T_red_hole_transf;
+            try{
+                w_T_red_hole_transf = tf_buffer_.lookupTransform("world", "task_board_ending_connector_hole_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw world and task_board_ending_connector_hole_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw world and task_board_ending_connector_hole_link NOT found!");
+            }
+            geometry_msgs::Pose w_T_red_hole_pose = geometry_msgs::toPose(w_T_red_hole_transf.transform);
+
+            // Call task manager to assign task
+            hrii_robothon_msgs::AssignTask assign_task_srv;
+            assign_task_srv.request.task_name = hrii_robothon_msgs::AssignTask::Request::OPEN_DOOR;
+            assign_task_srv.request.task_pose = w_T_red_hole_pose;
+
+            if (!assign_task_client_.call(assign_task_srv))
+            {
+                ROS_ERROR("Error calling assign task service.");
+                return false;
+            }
+            else if (!assign_task_srv.response.success)
+            {
+                ROS_ERROR("Failure assigning task. Exiting.");
+                ROS_ERROR_STREAM(assign_task_srv.response.message);
+                return false;
+            }
+            ROS_INFO_STREAM(assign_task_srv.response.message);
+            
+            open_door_srv.request.robot_id = assign_task_srv.response.robot_id;
+
+            ROS_INFO_STREAM("Previous robot used:" << prev_robot_id_);
+            if (prev_robot_id_.compare(open_door_srv.request.robot_id) != 0)
+            {
+                if (prev_robot_id_.compare(left_robot_id_) == 0)
+                {
+                    if (!homing()) return false;
+                }
+                else if (prev_robot_id_.compare(right_robot_id_) == 0)
+                {
+                    if (!otherHoming()) return false;
+                }
+            }
+            prev_robot_id_ = open_door_srv.request.robot_id;
+
+
+
+
+
 
             // Get door handle pose
             geometry_msgs::TransformStamped door_handle_transform;
@@ -637,6 +762,10 @@ class MainFSM
                 ROS_ERROR_STREAM("Tranform btw " << open_door_srv.request.robot_id <<"_link0 and task_board_door_center_of_rotation_link NOT found!");
                 return false;
             }
+
+
+            
+
             
             // Fill service call
             // open_door_srv.request.execution_time = 5.0;
@@ -671,7 +800,54 @@ class MainFSM
             probe_circuit_activation_client_.waitForExistence();
 
             hrii_robothon_msgs::ProbeCircuit probe_circuit_srv;
-            probe_circuit_srv.request.robot_id = left_robot_id_;
+            // probe_circuit_srv.request.robot_id = left_robot_id_; now done by task manager
+
+            // Look up task pose w.r.t. world frame
+            geometry_msgs::TransformStamped w_T_probe_transf;
+            try{
+                w_T_probe_transf = tf_buffer_.lookupTransform("world", "task_board_probe_link", ros::Time(0), ros::Duration(3));
+                ROS_INFO_STREAM("Tranform btw world and task_board_probe_link found!");
+            }
+            catch (tf2::TransformException &ex) 
+            {
+                ROS_WARN("%s",ex.what());
+                ROS_ERROR_STREAM("Tranform btw world and task_board_probe_link NOT found!");
+            }
+            geometry_msgs::Pose w_T_probe_pose = geometry_msgs::toPose(w_T_probe_transf.transform);
+
+            // Call task manager to assign task
+            hrii_robothon_msgs::AssignTask assign_task_srv;
+            assign_task_srv.request.task_name = hrii_robothon_msgs::AssignTask::Request::PROBE;
+            assign_task_srv.request.task_pose = w_T_probe_pose;
+
+            if (!assign_task_client_.call(assign_task_srv))
+            {
+                ROS_ERROR("Error calling assign task service.");
+                return false;
+            }
+            else if (!assign_task_srv.response.success)
+            {
+                ROS_ERROR("Failure assigning task. Exiting.");
+                ROS_ERROR_STREAM(assign_task_srv.response.message);
+                return false;
+            }
+            ROS_INFO_STREAM(assign_task_srv.response.message);
+            
+            probe_circuit_srv.request.robot_id = assign_task_srv.response.robot_id;
+
+            ROS_INFO_STREAM("Previous robot used:" << prev_robot_id_);
+            if (prev_robot_id_.compare(probe_circuit_srv.request.robot_id) != 0)
+            {
+                if (prev_robot_id_.compare(left_robot_id_) == 0)
+                {
+                    if (!homing()) return false;
+                }
+                else if (prev_robot_id_.compare(right_robot_id_) == 0)
+                {
+                    if (!otherHoming()) return false;
+                }
+            }
+            prev_robot_id_ = probe_circuit_srv.request.robot_id;
 
             // Get probe pose
             geometry_msgs::TransformStamped probe_handle_transform;
@@ -699,6 +875,8 @@ class MainFSM
                 ROS_ERROR_STREAM("Tranform btw " << probe_circuit_srv.request.robot_id << "_link0 and task_board_circuit_to_probe_link NOT found!");
                 return false;
             }
+
+
 
             probe_circuit_srv.request.probe_handle_pose.pose = geometry_msgs::toPose(probe_handle_transform.transform);
             probe_circuit_srv.request.circuit_pose.pose = geometry_msgs::toPose(circuit_to_probe_transform.transform);

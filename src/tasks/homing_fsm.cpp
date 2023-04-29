@@ -39,6 +39,8 @@ class HomingFSM
 
             // Set task frame to the end-effector frame
             hrii_robot_msgs::SetPose set_EE_T_task_frame_srv;
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.position.x = 0; 
+            set_EE_T_task_frame_srv.request.pose_stamped.pose.position.y = 0; 
             set_EE_T_task_frame_srv.request.pose_stamped.pose.position.z = 0; 
             set_EE_T_task_frame_srv.request.pose_stamped.pose.orientation.w = 1.0; 
 
@@ -66,7 +68,7 @@ class HomingFSM
             ROS_INFO("Gripper client initialized.");
             
             std::vector<geometry_msgs::Pose> waypoints;
-            double execution_time = 5.0;
+            double execution_time = 3.0;
 
             ROS_INFO("HOMING FSM STARTED!");
 

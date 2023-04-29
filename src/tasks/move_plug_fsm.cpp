@@ -11,7 +11,8 @@ class MovePlugFSM
             nh_(nh),
             default_closing_gripper_speed_(10),
             default_closing_gripper_force_(10),
-            desired_contact_force_(20)
+            desired_contact_force_(20),
+            desired_contact_force_timeout_(2.0)
         {
             activation_server_ = nh_.advertiseService("activate", &MovePlugFSM::activationCallback, this);
             ROS_INFO_STREAM(nh_.resolveName("activate") << " ROS service available.");
@@ -23,6 +24,7 @@ class MovePlugFSM
         double default_closing_gripper_speed_;
         double default_closing_gripper_force_;
         double desired_contact_force_;
+        double desired_contact_force_timeout_;
         HRII::TrajectoryHelper::Ptr traj_helper_;
 
         ros::ServiceServer activation_server_;
@@ -66,6 +68,12 @@ class MovePlugFSM
             ending_approach_pose = ending_pose;
             ending_approach_pose.position.z += 0.02;
 
+
+
+            // Gripper opening
+            if (!gripper_->setWidth(default_closing_gripper_speed_,0.03)) return false;
+
+
             // Move the robot to the starting hole connector approaching pose
             waypoints.push_back(starting_approach_pose);
             
@@ -77,8 +85,6 @@ class MovePlugFSM
                 return true;
             }
 
-            // Gripper opening
-            if (!gripper_->open(default_closing_gripper_speed_)) return false;
 
             // Move to starting pose
             waypoints.push_back(starting_pose);
@@ -99,7 +105,7 @@ class MovePlugFSM
             // Move the robot back to the starting hole connector approaching pose
             starting_approach_pose.position.z+=0.008;
             waypoints.push_back(starting_approach_pose);
-            execution_time = 2.0;
+            execution_time = 1.0;
 
             ROS_INFO("Moving to starting approach pose.");
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
@@ -114,7 +120,7 @@ class MovePlugFSM
             // Move the robot above the ending hole connector approaching pose
             ending_approach_pose.position.z+=0.008;
             waypoints.push_back(ending_approach_pose);
-            execution_time = 1.5;
+            execution_time = 1.0;
 
             ROS_INFO("Moving to ending approach pose.");
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
@@ -149,7 +155,9 @@ class MovePlugFSM
             if (!applyContactForce(nh_, req.robot_id,
                             "cart_hybrid_motion_force_controller",
                             hrii_robot_msgs::TaskSelection::Request::Z_LIN,
-                            desired_wrench))
+                            desired_wrench,
+                            -1.0,
+                            desired_contact_force_timeout_))
             {
                 ROS_ERROR_STREAM("Contact force application failed.");
                 return false;
@@ -157,7 +165,7 @@ class MovePlugFSM
             waypoints.erase(waypoints.begin());
 
 
-            ROS_ERROR("HERE PERFORM ROTATION: NEEDED FOR BETTER STOWING CABLE!");
+            ROS_WARN("HERE PERFORM ROTATION: NEEDED FOR BETTER STOWING CABLE!");
             // Move to real ending pose (with rotation)
             // ending_pose = req.ending_plug_pose.pose;
             // waypoints.push_back(ending_pose);
@@ -177,9 +185,10 @@ class MovePlugFSM
             // Move the robot up
             ending_pose.position.z+=0.050;
             waypoints.push_back(ending_pose);
+            execution_time = 1.0;
 
             ROS_INFO("Moving to up pose.");
-            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true)); // Put to false if rotation in prev step enabled
+            if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true)) // Put to false if rotation in prev step enabled
             // if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, false))
             {
                 res.success = false;

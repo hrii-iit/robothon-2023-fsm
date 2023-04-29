@@ -13,7 +13,7 @@ class ProbeCircuitFSM
             nh_(nh),
             default_closing_gripper_speed_(10.0),
             default_grasping_gripper_force_(5.0),
-            desired_contact_force_(5.0),
+            desired_contact_force_(6.0),
             controller_desired_pose_topic_name_("cart_hybrid_motion_force_controller/desired_tool_pose"),
             controller_set_EE_T_task_frame_service_name_("cart_hybrid_motion_force_controller/set_EE_T_task_frame")
         {
@@ -95,6 +95,7 @@ class ProbeCircuitFSM
             }
 
             // Move to probe handle pose
+
             execution_time = 4.0;
             if(!traj_helper_->moveToTargetPoseAndWait(probe_handle_pose, execution_time))
             {
@@ -167,9 +168,12 @@ class ProbeCircuitFSM
                 return false;
             }
 
+
+            if (!gripper_->setWidth(default_closing_gripper_speed_,0.03)) return false;
+
             // Move to approach pose
             desired_pose_msg = req.circuit_pose.pose;
-            desired_pose_msg.position.z += 0.15;
+            desired_pose_msg.position.z += 0.20;
             if(!traj_helper_->moveToTargetPoseAndWait(desired_pose_msg, execution_time))
             {
                 res.success = false;

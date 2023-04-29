@@ -76,7 +76,7 @@ class PressButtonFSM
             ROS_INFO("Gripper client initialized.");
 
             std::vector<geometry_msgs::Pose> waypoints;
-            double execution_time = 3.0;
+            double execution_time = 5.0;
 
             ROS_INFO("PRESS BUTTON FSM STARTED!");
 
@@ -98,7 +98,7 @@ class PressButtonFSM
             // Move to an approach pose w.r.t. the world frame
             // approach_pose.position.z -= 0.015;
             approach_pose.position.z = 0.098; // absolute
-            execution_time = 1.0;
+            execution_time = 2.0;
 
             waypoints.erase(waypoints.begin());
             waypoints.push_back(approach_pose);
@@ -130,7 +130,7 @@ class PressButtonFSM
             // We move the robot back to the approach pose upon the button
             approach_pose.position.z += 0.055; // button_pose + 0.05m
             waypoints.push_back(approach_pose);
-            execution_time = 3.0;
+            execution_time = 1.0;
 
             if(!traj_helper_->moveToTargetPoseAndWait(waypoints, execution_time, true))
             {
