@@ -7,10 +7,10 @@
 #include <geometry_msgs/WrenchStamped.h>
 #include <eigen_conversions/eigen_msg.h>
 
-inline bool checkThresholdSgn(const double& value, const double& threshold)
+inline bool checkThresholdSgn(const double& value, const double& threshold, const double& tolerance=0.0)
 { 
-    if (threshold > 0 && (value > threshold)) return true;
-    if (threshold < 0 && (value < threshold)) return true;
+    if (threshold > 0 && (value > threshold - tolerance)) return true;
+    if (threshold < 0 && (value < threshold + tolerance)) return true;
     return false;
 }
 
@@ -53,7 +53,8 @@ inline bool applyContactForce(ros::NodeHandle& nh,
                               const std::string& controller_name,
                               const int& axis,
                               const geometry_msgs::WrenchStamped& desired_wrench_msg,
-                              const double& timeout=-1)
+                              const double& timeout=-1,
+                              const double& contact_timeout=0.1)
 {
     // Robot controller task selection (motion-force task switch)
     // ROS subscriber and publisher definition
@@ -106,6 +107,11 @@ inline bool applyContactForce(ros::NodeHandle& nh,
     ros::Time starting_time = ros::Time::now();
     ros::Rate check_rate(100);
 
+    ros::Time starting_contact_time = ros::Time::now();
+    bool contact_flag = false;
+
+    double tolerance = 1.0;
+
     while (ros::ok())
     {
         desired_wrench_pub.publish(desired_wrench_msg);
@@ -122,10 +128,23 @@ inline bool applyContactForce(ros::NodeHandle& nh,
             }
         }
 
-        if (checkThresholdSgn(ext_wrench[axis], desired_wrench_eigen[axis]))
+        if (checkThresholdSgn(ext_wrench[axis], desired_wrench_eigen[axis], tolerance))
         {
-            ROS_INFO("Contact detected.");
-            break;
+            if (contact_flag == false)
+            {
+                ROS_INFO("Contact detected.");
+                contact_flag = true;
+                starting_contact_time = ros::Time::now();
+            }
+            if ((ros::Time::now() - starting_contact_time).toSec() > contact_timeout)
+            {
+                ROS_INFO("Contact timeout.");
+                break;
+            }
+        }
+        else
+        {
+            contact_flag = false;
         }
 
         ros::spinOnce();
