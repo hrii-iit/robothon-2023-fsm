@@ -28,7 +28,7 @@ dictitems:
       motion_rotation_gain: 0.005
       motion_translation_gain: 0.03
       name: Default
-      nullspace_integral_gain: 0.3
+      nullspace_integral_gain: 2.0
       parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
         state: []
       parent: 0
@@ -42,7 +42,7 @@ dictitems:
     state: []
   motion_rotation_gain: 0.005
   motion_translation_gain: 0.03
-  nullspace_integral_gain: 0.3
+  nullspace_integral_gain: 2.0
   torque_D_gain: 0.0
   torque_I_gain: 0.0
   torque_PID_max_output: 1.0
