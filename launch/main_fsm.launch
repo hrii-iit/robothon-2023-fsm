@@ -76,9 +76,10 @@
     <!-- <arg name="right_robot_controller" default="cartesian_impedance_example_controller"/> -->
     <!-- <arg name="right_robot_controller_desired_pose_topic" default="$(arg right_robot_controller)/equilibrium_pose"/> -->
     <arg name="right_robot_init_pose_yaw" default="3.14159"/>
-    <arg name="right_robot_init_pose_x" default="0.475"/>
-    <arg name="right_robot_init_pose_y" default="-0.317"/>
-    <arg name="right_robot_init_pose_z" default="0"/> <!-- in real world it is -0.007 -->
+    <arg name="right_robot_init_pose_x" default="0.479"/>
+    <!-- <arg name="right_robot_init_pose_y" default="-0.317"/> -->
+    <arg name="right_robot_init_pose_y" default="-0.3155"/>
+    <arg name="right_robot_init_pose_z" default="-0.003"/> <!-- in real world it is -0.007 -->
     <arg name="right_robot_controller_config_file" default="$(find hrii_task_board_fsm)/config/controllers/franka_right_cart_hybrid_motion_force_controller.yaml"/>
     <arg name="right_robot_launch_interactive_marker" default="false"/>
 
